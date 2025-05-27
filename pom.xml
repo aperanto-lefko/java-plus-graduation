@@ -18,8 +18,9 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>main-server</module>
-		<module>stat</module>
+		<module>stats</module>
+		<module>core</module>
+		<module>infra</module>
 	</modules>
 
 	<properties>
