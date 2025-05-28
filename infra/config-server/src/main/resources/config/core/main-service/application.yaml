@@ -1,0 +1,38 @@
+stat-server:
+  url: ${CLIENT_URL:http://localhost:9090}
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: always
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:6543/main
+    username: main
+    password: main
+
+#  config:
+#    activate:
+#      on-profile: ci,test
+#  datasource:
+#    driverClassName: org.h2.Driver
+#    url: jdbc:h2:file:./db/main
+#    username: main
+#    password: main
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        orm:
+          jdbc:
+            bind: trace
+server:
+  port: 0

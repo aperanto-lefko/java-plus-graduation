@@ -1,19 +1,17 @@
-server:
-  port: 8888
-
 spring:
   application:
-    name: config-server
-  profiles:
-    active: native
+    name: gateway-server
+  config:
+    import: "configserver:"
   cloud:
     config:
-      server:
-        native:
-          search-locations:
-            - classpath:config/core/{application}/
-            - classpath:config/infra/{application}/
-            - classpath:config/stats/{application}/
+      fail-fast: true
+      retry:
+        use-random-policy: true
+        max-interval: 6000
+      discovery:
+        enabled: true
+        serviceId: config-server
 eureka:
   client:
     serviceUrl:
