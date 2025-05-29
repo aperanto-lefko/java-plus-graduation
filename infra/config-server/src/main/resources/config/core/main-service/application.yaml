@@ -13,16 +13,12 @@ spring:
   sql:
     init:
       mode: always
-#  datasource:
-#    driverClassName: org.postgresql.Driver
-#    url: jdbc:postgresql://localhost:6543/main
-#    username: main
-#    password: main
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    driverClassName: org.postgresql.Driver
+#    url: jdbc:postgresql://localhost:6543/main
+    url: jdbc:postgresql://ewm-db:5432/main
+    username: main
+    password: main
 
 #  config:
 #    activate:
