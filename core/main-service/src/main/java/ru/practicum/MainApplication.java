@@ -11,8 +11,5 @@ public class MainApplication {
     public static void main(String[] args) {
         SpringApplication.run(MainApplication.class, args);
     }
-    @PostConstruct
-    public void logPort() {
-        System.out.println("Actual port: " + System.getProperty("server.port"));
-    }
+
 }

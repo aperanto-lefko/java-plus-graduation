@@ -4,10 +4,15 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.MaxAttemptsRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -15,23 +20,58 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.dto.HitDto;
 import ru.practicum.dto.StatsDto;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
 @Component
 @Slf4j
 public class StatClient {
-    private final RestClient restClient;
+    private final DiscoveryClient discoveryClient;
+    private final RetryTemplate retryTemplate;
+    private final RestClient.Builder restClientBuilder;
+    private final String statsServerName;
 
     @Autowired
-    public StatClient(@Value("${stat-server.url}") String serverUrl) {
-        this.restClient = RestClient.create(serverUrl);
+    public StatClient(DiscoveryClient discoveryClient,
+                      @Value("${stats-server.name}") String statsServerName) {
+       this.discoveryClient = discoveryClient;
+       this.retryTemplate = createRetryTemplate();
+       this.restClientBuilder = RestClient.builder();
+       this.statsServerName = statsServerName;
+    }
+
+    private RetryTemplate createRetryTemplate() {
+        RetryTemplate retryTemplate = new RetryTemplate();
+
+        FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+        backOffPolicy.setBackOffPeriod(3000L); // 3 секунды между попытками
+        retryTemplate.setBackOffPolicy(backOffPolicy);
+        MaxAttemptsRetryPolicy retryPolicy = new MaxAttemptsRetryPolicy();
+        retryPolicy.setMaxAttempts(3);
+        retryTemplate.setRetryPolicy(retryPolicy);
+        return retryTemplate;
+    }
+    private ServiceInstance getInstance() { //получение экземпляра сервиса от службы обнаружения
+        try {
+            return discoveryClient.getInstances(statsServerName).stream()
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Нет доступных экземпляров сервиса " + statsServerName));
+        } catch (Exception e) {
+            throw new IllegalStateException("Ошибка при получении экземпляра сервиса " + statsServerName, e);
+        }
+    }
+    private URI makeUri(String path) {
+        ServiceInstance instance = retryTemplate.execute(context -> getInstance());
+        return URI.create("http://" + instance.getHost() + ":" + instance.getPort() + path);
     }
 
     public ResponseEntity<Void> hit(@Valid HitDto hitDto) { //Сохранение информации о том, что на uri конкретного сервиса был отправлен запрос пользователем с ip
         try {
-            ResponseEntity<Void> response = restClient.post()
-                    .uri("/hit")
+            URI uri = makeUri("/hit");
+            ResponseEntity<Void> response = restClientBuilder.build()
+                    .post()
+                    .uri(uri)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(hitDto)
                     .retrieve()
@@ -46,8 +86,11 @@ public class StatClient {
 
     public ResponseEntity<List<StatsDto>> getStats(String start, String end, List<String> uris, boolean unique) { // Получение статистики по посещениям.
         try {
-            ResponseEntity<List<StatsDto>> response = restClient.get()
-                    .uri(buildStatsUri(start, end, uris, unique))
+            String path = buildStatsUri(start, end, uris, unique);
+            URI uri = makeUri(path);
+            ResponseEntity<List<StatsDto>> response = restClientBuilder.build()
+                    .get()
+                    .uri(uri)
                     .retrieve()
                     .toEntity(new ParameterizedTypeReference<>() {
                     });
