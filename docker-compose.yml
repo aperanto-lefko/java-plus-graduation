@@ -1,21 +1,6 @@
-#services:
-#  stats-server:
-#    ports:
-#      - "9090:9090"
-#
-#  stats-db:
-#    image: postgres:16.1
-#
-#  ewm-service:
-#    ports:
-#      - "8080:8080"
-#
-#  ewm-db:
-#    image: postgres:16.1
-
 services:
   stats-server:
-    build: stat/stat-server
+    build: stats/stat-server
     container_name: stat-server
     ports:
       - "9090:9090"
