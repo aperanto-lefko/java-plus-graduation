@@ -37,7 +37,7 @@ public class CompilationServiceImpl implements CompilationService {
      * @return DTO подборки событий
      */
     @Override
-    public CompilationDto get(Long id) {
+    public CompilationDto getCompilationById(Long id) {
         log.info("Получение подборки событий с id: {}", id);
         return CompilationMapper.INSTANCE.toDto(getById(id));
     }

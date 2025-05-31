@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface CompilationService {
 
-    CompilationDto get(Long id);
+    CompilationDto getCompilationById(Long id);
 
     List<CompilationDto> getAll(CompilationDtoGetParam param);
 

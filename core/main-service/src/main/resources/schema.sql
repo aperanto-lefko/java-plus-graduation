@@ -96,7 +96,6 @@ CREATE TABLE IF NOT EXISTS comments (
     user_id BIGINT NOT NULL,
     event_id BIGINT NOT NULL,
     parent_comment_id BIGINT NULL,
-    --parent_id BIGINT NULL,
     created TIMESTAMP NOT NULL,
     description VARCHAR(5000) NOT NULL,
     CONSTRAINT pk_comments PRIMARY KEY (id),

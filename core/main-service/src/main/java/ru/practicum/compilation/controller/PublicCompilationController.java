@@ -27,6 +27,6 @@ public class PublicCompilationController {
     @GetMapping("/{compId}")
     public ResponseEntity<CompilationDto> getCompilation(@PathVariable Long compId) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(compilationService.get(compId));
+                .body(compilationService.getCompilationById(compId));
     }
 }
