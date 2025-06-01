@@ -3,11 +3,14 @@ spring:
     gateway:
       discovery.locator.enabled: true
       routes:
-        - id: main_service_route
-          uri: lb://main-service
-          predicates:
-            - Path=/**
-
+#        - id: main_service_route
+#          uri: lb://main-service
+#          predicates:
+#            - Path=/**
+          - id: user_service_route
+            uri: lb://user-service
+            predicates:
+              - Path=/admin/users/**
 server:
   port: 8080
 

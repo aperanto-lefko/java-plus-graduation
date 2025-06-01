@@ -1,4 +1,5 @@
 services:
+
   #сервис статистики
   discovery-server:
     build: infra/discovery-server
@@ -6,7 +7,7 @@ services:
     ports:
       - "8761:8761"
     networks:
-      - evm-net
+      - ewm-net
     healthcheck:
       test: "curl --fail --silent discovery-server:8761/actuator/health | grep UP || exit 1"
       timeout: 5s
@@ -20,7 +21,7 @@ services:
       discovery-server:
         condition: service_healthy
     networks:
-      - evm-net
+      - ewm-net
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-server:8761/eureka/
     healthcheck:
@@ -131,6 +132,10 @@ services:
       retries: 15
     networks:
       - ewm-net
+
+networks:
+  ewm-net:
+    driver: bridge
 
 #  ewm-service:
 #    build: main-server
