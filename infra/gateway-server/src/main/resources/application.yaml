@@ -21,3 +21,9 @@ eureka:
     hostname: localhost
     instance-id: "${spring.application.name}:${server.port}:${random.value}"
     leaseRenewalIntervalInSeconds: 10
+
+logging:
+  level:
+    org.springframework.boot.context.config: DEBUG
+    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: DEBUG
+    reactor.netty.http.server: DEBUG

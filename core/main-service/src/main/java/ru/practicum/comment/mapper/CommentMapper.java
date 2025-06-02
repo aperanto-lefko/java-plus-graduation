@@ -16,7 +16,7 @@ public interface CommentMapper {
     @Mapping(target = "parentCommentId", source = "parentComment.id")
     CommentDto toDto(Comment comment);
 
-    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "userId", ignore = true)
     @Mapping(target = "eventId", ignore = true)
     @Mapping(target = "parentId", ignore = true)
     List<CommentDto> toDtos(List<Comment> comments);

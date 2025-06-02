@@ -1,6 +1,7 @@
 package ru.practicum.user.service;
 
 import ru.practicum.user.dto.UserDto;
+import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.dto.UsersDtoGetParam;
 import ru.practicum.user.model.User;
 
@@ -15,4 +16,6 @@ public interface UserService {
     void delete(Long id);
 
     User getUserById(Long id);
+
+    UserShortDto getUserDtoById(Long id);
 }

@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import ru.practicum.event.model.Event;
-import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,9 +31,8 @@ public class Comment {
     @JoinColumn(name = "event_id", nullable = false)
     private Event event;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @ManyToOne
     @JoinColumn(name = "parent_comment_id")

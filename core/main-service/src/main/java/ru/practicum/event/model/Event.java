@@ -8,7 +8,7 @@ import lombok.*;
 import org.hibernate.annotations.Formula;
 import ru.practicum.category.model.Category;
 import ru.practicum.event.validate.TimeAtLeastTwoHours;
-import ru.practicum.user.model.User;
+
 
 import java.time.LocalDateTime;
 
@@ -28,9 +28,9 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User initiator;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
     @ManyToOne(cascade = {CascadeType.ALL}) //при сохранении event,сохранится location
     @JoinColumn(name = "location_id")
     private Location location;

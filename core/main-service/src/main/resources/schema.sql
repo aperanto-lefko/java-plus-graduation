@@ -39,8 +39,7 @@ CREATE TABLE IF NOT EXISTS events (
     state VARCHAR(20),
     CONSTRAINT pk_events PRIMARY KEY (id),
     CONSTRAINT fk_events_category FOREIGN KEY (category_id) REFERENCES categories (id),
-    CONSTRAINT fk_events_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    CONSTRAINT fk_events_location FOREIGN KEY (location_id) REFERENCES locations (id)
+   CONSTRAINT fk_events_location FOREIGN KEY (location_id) REFERENCES locations (id)
 );
 
 CREATE TABLE IF NOT EXISTS views (
@@ -60,7 +59,6 @@ CREATE TABLE IF NOT EXISTS requests (
     created TIMESTAMP NOT NULL,
     status VARCHAR(50) NOT NULL,
     CONSTRAINT pk_requests PRIMARY KEY (id),
-    CONSTRAINT fk_requests_user FOREIGN KEY (requester_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_requests_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
     CONSTRAINT uq_requests UNIQUE (requester_id, event_id)
 );
@@ -99,7 +97,6 @@ CREATE TABLE IF NOT EXISTS comments (
     created TIMESTAMP NOT NULL,
     description VARCHAR(5000) NOT NULL,
     CONSTRAINT pk_comments PRIMARY KEY (id),
-    CONSTRAINT fk_comments_users FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_comments_events FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
     CONSTRAINT fk_comments_parent FOREIGN KEY (parent_comment_id) REFERENCES comments (id) ON DELETE CASCADE
 );

@@ -24,7 +24,9 @@ import ru.practicum.exception.ConflictStateException;
 import ru.practicum.exception.ConflictTimeException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
-import ru.practicum.user.service.UserService;
+import ru.practicum.user.dto.UserShortDto;
+import ru.practicum.user.feign.UserServiceClient;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,18 +40,18 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final LocationService locationService;
     private final CategoryService categoryService;
-    private final UserService userService;
     private final ViewService viewService;
     private final EventMapper mp;
     private final LocationMapper lmp;
     private final QEvent event = QEvent.event;
+    private final UserServiceClient userServiceClient;
 
     @Transactional
     @Override
     public EventFullDto addEvent(Long userId, NewEventDto newEventDto) {
         Event ev = mp.toEntity(newEventDto);
         ev.setCategory(categoryService.getCategory(ev.getCategory().getId()));
-        ev.setInitiator(userService.getUserById(userId));
+        ev.setUserId(getUserById(userId).getId());
         log.info("Создание события {}", ev);
         return mp.toEventFullDto(eventRepository.save(ev));
     }
@@ -57,7 +59,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getEventsForUser(EventDtoGetParam prm) {
         log.info("Получение списка мероприятий для пользователя с id {} ", prm.getUserId());
-        Predicate predicate = event.initiator.id.eq(prm.getUserId());
+        Predicate predicate = event.userId.eq(prm.getUserId());
         PageRequest pageRequest = PageRequest.of(prm.getFrom(), prm.getSize());
         List<Event> events = eventRepository.findAll(predicate, pageRequest).getContent();
         return mp.toEventShortDto(events);
@@ -65,7 +67,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto getEventByIdForUser(EventDtoGetParam prm) {
-        Predicate predicate = event.initiator.id.eq(prm.getUserId())
+        Predicate predicate = event.userId.eq(prm.getUserId())
                 .and(event.id.eq(prm.getEventId()));
         Event ev = eventRepository.findOne(predicate)
                 .orElseThrow(() -> new NotFoundException(
@@ -79,7 +81,7 @@ public class EventServiceImpl implements EventService {
     public List<EventFullDto> getEventsForAdmin(EventDtoGetParam prm) {
         Predicate predicate = null;
         if (prm.getUsers() != null && !prm.getUsers().isEmpty()) {
-            predicate = ExpressionUtils.and(predicate, event.initiator.id.in(prm.getUsers()));
+            predicate = ExpressionUtils.and(predicate, event.userId.in(prm.getUsers()));
         }
         if (prm.getStates() != null && !prm.getStates().isEmpty()) {
             List<State> states = prm.getStates().stream()
@@ -133,7 +135,7 @@ public class EventServiceImpl implements EventService {
         if (rq.getEventDate() != null && rq.getEventDate().isBefore(LocalDateTime.now().plusHours(2L))) {
             throw new ConflictTimeException("Время не может быть раньше, через два часа от текущего момента");
         }
-        Event ev = eventRepository.findByIdAndInitiatorId(eventId, userId)
+        Event ev = eventRepository.findByIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Событие с id %d для пользователя с id %d не найдено.", eventId, userId)));
         if (ev.getState() == State.PUBLISHED) {
@@ -219,6 +221,13 @@ public class EventServiceImpl implements EventService {
         if (start.isAfter(end)) {
             throw new ValidationException("Дата начала события позже даты окончания");
         }
+    }
+    private UserShortDto getUserById(Long userId) {
+        UserShortDto user = userServiceClient.getUserById(userId).getBody();
+        if (user == null) {
+            throw new NotFoundException("Пользователь не найден с id: " + userId);
+        }
+        return user;
     }
 }
 

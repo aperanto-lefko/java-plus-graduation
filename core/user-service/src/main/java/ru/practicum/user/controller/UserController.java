@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.user.dto.UserDto;
+import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.dto.UsersDtoGetParam;
 import ru.practicum.user.service.UserService;
 
@@ -46,4 +47,10 @@ public class UserController {
                 .body("Пользователь c id: " + userId + " удален");
     }
 
+    @GetMapping("/{userId}")
+    ResponseEntity<UserShortDto> getUserById(@PathVariable Long userId) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(userService.getUserDtoById(userId));
+    }
 }

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.event.model.Event;
-import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;
 
@@ -28,9 +27,8 @@ public class Request {
     @Column(name = "created", nullable = false)
     LocalDateTime created;
 
-    @ManyToOne
-    @JoinColumn(name = "requester_id", nullable = false)
-    User requester;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)

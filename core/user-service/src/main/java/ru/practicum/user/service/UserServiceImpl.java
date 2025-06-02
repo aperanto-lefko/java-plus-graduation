@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.dto.UserDto;
+import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.dto.UsersDtoGetParam;
 import ru.practicum.user.mapper.UserMapper;
 import ru.practicum.user.model.QUser;
@@ -103,5 +104,8 @@ public class UserServiceImpl implements UserService {
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
+    }
+    public UserShortDto getUserDtoById(Long id) {
+        return UserMapper.toUserShortDto(getUserById(id));
     }
 }

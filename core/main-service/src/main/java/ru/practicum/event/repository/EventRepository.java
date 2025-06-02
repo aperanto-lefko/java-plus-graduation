@@ -10,5 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event> {
-    Optional<Event> findByIdAndInitiatorId(Long eventId, Long userId);
+    Optional<Event> findByIdAndUserId(Long eventId, Long userId);
 }

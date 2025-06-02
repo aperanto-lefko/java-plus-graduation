@@ -17,8 +17,9 @@ import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.Request;
 import ru.practicum.request.model.RequestStatus;
 import ru.practicum.request.repository.RequestRepository;
-import ru.practicum.user.model.User;
-import ru.practicum.user.repository.UserRepository;
+import ru.practicum.user.dto.UserShortDto;
+import ru.practicum.user.feign.UserServiceClient;
+
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -29,10 +30,10 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class RequestServiceImpl implements RequestService {
-    UserRepository userRepository;
     EventRepository eventRepository;
     RequestRepository requestRepository;
     RequestMapper requestMapper;
+    UserServiceClient userServiceClient;
 
     @Override
     public ParticipationRequestDto createParticipationRequest(long userId, long eventId) {
@@ -44,14 +45,13 @@ public class RequestServiceImpl implements RequestService {
             throw new ConditionsNotMetException("Нельзя участвовать в неопубликованном событии");
         }
 
-        if (event.getInitiator().getId().equals(userId)) {
+        if (event.getUserId().equals(userId)) {
             throw new ConditionsNotMetException("Инициатор события не может добавить запрос на участие в своём событии");
         }
 
         checkParticipantLimit(event.getParticipantLimit(), getConfirmedRequests(eventId));
 
-        User requester = userRepository.findById(userId).orElseThrow(
-                () -> new NotFoundException(String.format("Пользователь с id=%d не найден", userId)));
+        UserShortDto user = getUserById(userId);
 
         RequestStatus status = RequestStatus.PENDING;
         if (event.getParticipantLimit() == 0) {
@@ -62,7 +62,7 @@ public class RequestServiceImpl implements RequestService {
 
         Request request = Request.builder()
                 .event(event)
-                .requester(requester)
+                .userId(userId)
                 .status(status)
                 .created(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                 .build();
@@ -78,13 +78,13 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public List<ParticipationRequestDto> getAllByParticipantId(long userId) {
-        List<Request> foundRequests = requestRepository.findAllByRequester_Id(userId);
+        List<Request> foundRequests = requestRepository.findAllByUserId(userId);
         return requestMapper.toDtoList(foundRequests);
     }
 
     @Override
     public List<ParticipationRequestDto> getAllByInitiatorIdAndEventId(long userId, long eventId) {
-        List<Request> foundRequests = requestRepository.findAllByInitiatorIdAndEventId(userId, eventId);
+        List<Request> foundRequests = requestRepository.findAllByUserIdAndEventId(userId, eventId);
         return requestMapper.toDtoList(foundRequests);
     }
 
@@ -123,7 +123,7 @@ public class RequestServiceImpl implements RequestService {
                 () -> new NotFoundException(String.format("Запрос на участие в событии с id запроса=%d не найден", requestId))
         );
 
-        Long requesterId = request.getRequester().getId();
+        Long requesterId = request.getUserId();
         if (!requesterId.equals(userId)) {
             throw new ConditionsNotMetException("Пользователь не является участником в запросе на участие в событии");
         }
@@ -177,4 +177,12 @@ public class RequestServiceImpl implements RequestService {
         List<Long> rejectedRequestIds = rejected.stream().map(ParticipationRequestDto::getId).toList();
         updateStatus(RequestStatus.REJECTED, rejectedRequestIds);
     }
+    private UserShortDto getUserById(Long userId) {
+        UserShortDto user = userServiceClient.getUserById(userId).getBody();
+        if (user == null) {
+            throw new NotFoundException("Пользователь не найден с id: " + userId);
+        }
+        return user;
+    }
+
 }
