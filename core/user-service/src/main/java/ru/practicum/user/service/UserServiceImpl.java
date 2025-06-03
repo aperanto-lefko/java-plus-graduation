@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.exception.ConflictStateException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.dto.UserDto;
 import ru.practicum.user.dto.UserShortDto;
@@ -16,6 +17,8 @@ import ru.practicum.user.model.User;
 import ru.practicum.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -67,6 +70,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto create(UserDto userDto) {
+
         log.info("Создание нового пользователя с email: {}", userDto.getEmail());
         return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(userDto)));
     }
@@ -99,6 +103,25 @@ public class UserServiceImpl implements UserService {
         }
 
         return user.id.in(usersDtoGetParam.getIds());
+    }
+
+    public List<UserShortDto> getUserShortDtosByIds(List<Long> ids) {
+        List<User> users = userRepository.findAllById(ids);
+
+        // проверка не пропущены ли какие-то ID
+        if (users.size() != ids.size()) {
+            Set<Long> foundIds = users.stream()
+                    .map(User::getId)
+                    .collect(Collectors.toSet());
+            List<Long> missing = ids.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .toList();
+            throw new NotFoundException("Не найдены пользователи с id: " + missing);
+        }
+
+        return users.stream()
+                .map(UserMapper::toUserShortDto)
+                .collect(Collectors.toList());
     }
 
     public User getUserById(Long id) {

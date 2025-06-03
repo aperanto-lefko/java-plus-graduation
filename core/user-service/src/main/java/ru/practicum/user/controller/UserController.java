@@ -34,6 +34,7 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UserDto> createUser(@RequestBody @Valid UserDto userDto) {
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(userService.create(userDto));
     }
@@ -52,5 +53,10 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(userService.getUserDtoById(userId));
+    }
+    @PostMapping("/batch")
+    public ResponseEntity<List<UserShortDto>> getUsersByIds(@RequestBody List<Long> userIds) {
+        List<UserShortDto> users = userService.getUserShortDtosByIds(userIds);
+        return ResponseEntity.ok(users);
     }
 }

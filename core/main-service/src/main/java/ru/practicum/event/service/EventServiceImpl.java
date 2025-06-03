@@ -29,7 +29,13 @@ import ru.practicum.user.feign.UserServiceClient;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -62,7 +68,7 @@ public class EventServiceImpl implements EventService {
         Predicate predicate = event.userId.eq(prm.getUserId());
         PageRequest pageRequest = PageRequest.of(prm.getFrom(), prm.getSize());
         List<Event> events = eventRepository.findAll(predicate, pageRequest).getContent();
-        return mp.toEventShortDto(events);
+        return toEventShortDtoAddUserList(events);
     }
 
     @Override
@@ -74,8 +80,9 @@ public class EventServiceImpl implements EventService {
                         String.format("Событие с id %d для пользователя с id %d не найдено.",
                                 prm.getEventId(), prm.getUserId())));
         log.info("Получение события с id {}  для пользователя с id {}", prm.getEventId(), prm.getUserId());
-        return mp.toEventFullDto(ev);
+        return addUserShortDtoToFullDto(ev, prm.getUserId());
     }
+
 
     @Override
     public List<EventFullDto> getEventsForAdmin(EventDtoGetParam prm) {
@@ -102,7 +109,8 @@ public class EventServiceImpl implements EventService {
                 ? eventRepository.findAll(pageRequest).getContent()
                 : eventRepository.findAll(predicate, pageRequest).getContent();
         log.info("Получение списка событий администратором с параметрами {} и предикатом {}", prm, predicate);
-        return mp.toEventFullDto(events);
+
+        return toEventFullDtoAddUserList(events);
     }
 
     @Override
@@ -126,7 +134,8 @@ public class EventServiceImpl implements EventService {
         mp.updateFromAdmin(rq, ev);
         ev.setState(rq.getStateAction() == StateAction.PUBLISH_EVENT ? State.PUBLISHED : State.CANCELED);
         log.info("Обновление события с id {} администратором с параметрами {}", id, rq);
-        return mp.toEventFullDto(eventRepository.save(ev));
+        Event savedEvent = eventRepository.save(ev);
+        return addUserShortDtoToFullDto(savedEvent, savedEvent.getUserId());
     }
 
     @Override
@@ -152,7 +161,8 @@ public class EventServiceImpl implements EventService {
             ev.setLocation(locationService.getLocation(lmp.toLocation(rq.getLocation())));
         }
         mp.updateFromUser(rq, ev);
-        return mp.toEventFullDto(eventRepository.save(ev));
+        Event savedEvent = eventRepository.save(ev);
+        return addUserShortDtoToFullDto(savedEvent, savedEvent.getUserId());
     }
 
     @Override
@@ -192,7 +202,7 @@ public class EventServiceImpl implements EventService {
         if (!events.isEmpty()) {
             viewService.saveViews(events, rqt);
         }
-        return mp.toEventShortDto(events);
+        return toEventShortDtoAddUserList(events);
     }
 
     @Override
@@ -203,7 +213,7 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Событие с id %d не найдено.", id)));
         viewService.saveView(ev, rqt);
-        return mp.toEventFullDto(ev);
+        return addUserShortDtoToFullDto(ev, ev.getUserId());
     }
 
     @Override
@@ -228,6 +238,49 @@ public class EventServiceImpl implements EventService {
             throw new NotFoundException("Пользователь не найден с id: " + userId);
         }
         return user;
+    }
+
+    public List<EventFullDto> toEventFullDtoAddUserList(List<Event> events) {
+        Map<Long, UserShortDto> userMap = getUserMap(events);
+        return events.stream()
+                .map(event -> {
+                    EventFullDto dto = mp.toEventFullDto(event);
+                    dto.setInitiator(userMap.get(event.getUserId()));
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<EventShortDto> toEventShortDtoAddUserList(List<Event> events) {
+        Map<Long, UserShortDto> userMap = getUserMap(events);
+        return events.stream()
+                .map(event -> {
+                    EventShortDto dto = mp.toEventShortDto(event);
+                    dto.setInitiator(userMap.get(event.getUserId()));
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private Map<Long, UserShortDto> getUserMap(List<Event> events) {
+        Set<Long> userIds = events.stream()
+                .map(Event::getUserId)
+                .collect(Collectors.toSet());
+
+        List<UserShortDto> users = userServiceClient.getUsersByIds(new ArrayList<>(userIds)).getBody();
+        if (users == null) {
+            return Collections.emptyMap(); // Защита от NPE
+        }
+
+        return users.stream()
+                .collect(Collectors.toMap(UserShortDto::getId, Function.identity()));
+    }
+
+    private EventFullDto addUserShortDtoToFullDto(Event event, Long userId) {
+        EventFullDto dto = mp.toEventFullDto(event);
+        UserShortDto userDto = userServiceClient.getUserById(userId).getBody();
+        dto.setInitiator(userDto);
+        return dto;
     }
 }
 
