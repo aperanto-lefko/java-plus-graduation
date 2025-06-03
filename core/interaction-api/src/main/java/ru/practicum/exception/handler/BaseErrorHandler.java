@@ -15,115 +15,68 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 @RestControllerAdvice
 public class BaseErrorHandler {
-
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.NOT_FOUND;
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status, "Объект не найден",
-                e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-
-        return response;
+        return handleException(e, HttpStatus.NOT_FOUND, "Объект не найден");
     }
 
-    // Перехватывает исключение из базы данных, при неверных параметрах в запросах
     @ExceptionHandler({DataIntegrityViolationException.class})
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.CONFLICT;
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status, "Нарушение целостности данных",
-                e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-
-        return response;
+        return handleException(e, HttpStatus.CONFLICT, "Нарушение целостности данных");
     }
 
-    // Перехватывает исключения при валидации с помощью jakarta.validation
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status, "Запрос составлен некорректно",
-                e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-
-        return response;
+        return handleException(e, HttpStatus.BAD_REQUEST, "Запрос составлен некорректно");
     }
-
 
     @ExceptionHandler(DataAlreadyInUseException.class)
     public ResponseEntity<ErrorResponse> handleDataAlreadyInUseException(DataAlreadyInUseException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.CONFLICT; // возможно статус должен быть другим
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status,
-                "Исключение, связанное с нарушением целостности данных", e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-
-        return response;
+        return handleException(e, HttpStatus.CONFLICT, "Данные уже используются");
     }
 
     @ExceptionHandler(ConflictStateException.class)
     public ResponseEntity<ErrorResponse> handleConflictEventStateException(ConflictStateException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.CONFLICT;
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status,
-                "Исключение, связанное с конфликтом статуса события при изменении", e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-        return response;
+        return handleException(e, HttpStatus.CONFLICT, "Конфликт статуса события");
     }
 
     @ExceptionHandler(ConflictTimeException.class)
     public ResponseEntity<ErrorResponse> handleConflictEventTimeException(ConflictTimeException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.CONFLICT;
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status,
-                "Исключение, связанное  с конфликтом времени события при изменении", e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-        return response;
+        return handleException(e, HttpStatus.CONFLICT, "Конфликт времени события");
     }
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(ValidationException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status,
-                "Исключение, связанное  валидацией данных", e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-        return response;
+        return handleException(e, HttpStatus.BAD_REQUEST, "Ошибка валидации данных");
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.CONFLICT;
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status,
-                "Исключение, связанное с неизвестным значением аргумента", e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-        return response;
+        return handleException(e, HttpStatus.CONFLICT, "Некорректное значение аргумента");
     }
 
     @ExceptionHandler(ConditionsNotMetException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(ConditionsNotMetException e) {
-        String nowTime = LocalDateTime.now().format(FORMATTER);
-        HttpStatus status = HttpStatus.CONFLICT;
-        ResponseEntity<ErrorResponse> response = getResponseEntity(status,
-                "Исключение, связанное с неизвестным значением аргумента", e.getMessage(), nowTime);
-        logging(e, status, nowTime);
-        return response;
+    public ResponseEntity<ErrorResponse> handleConditionsNotMetException(ConditionsNotMetException e) {
+        return handleException(e, HttpStatus.CONFLICT, "Условия не выполнены");
     }
 
-    // Метод для составления ответа при возникновении исключения
-    private ResponseEntity<ErrorResponse> getResponseEntity(HttpStatus status, String reason, String message,
-                                                            String timestamp) {
-        return new ResponseEntity<>(new ErrorResponse(status.name(), reason, message, timestamp), status);
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleServiceUnavailableException(ServiceUnavailableException e) {
+        return handleException(e, HttpStatus.BAD_REQUEST, "Сервис не доступен");
     }
 
-    // Метод для логгирования исключений
+    // Общий метод обработки исключений
+    private <T extends Exception> ResponseEntity<ErrorResponse> handleException(T e, HttpStatus status, String reason) {
+        String timestamp = LocalDateTime.now().format(FORMATTER);
+        logging(e, status, timestamp);
+        return new ResponseEntity<>(new ErrorResponse(status.name(), reason, e.getMessage(), timestamp), status);
+    }
+
+
     private void logging(Exception e, HttpStatus status, String timestamp) {
-        log.error("{} - Status: {}, Description: {}, Timestamp: {}", e.getClass(), status,
-                e.getMessage(), timestamp);
+        log.error("{} - Status: {}, Description: {}, Timestamp: {}",
+                e.getClass().getSimpleName(), status, e.getMessage(), timestamp);
     }
 }
