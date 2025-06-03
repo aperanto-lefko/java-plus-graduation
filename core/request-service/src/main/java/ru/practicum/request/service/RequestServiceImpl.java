@@ -15,7 +15,7 @@ import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.mapper.RequestMapper;
 import ru.practicum.request.model.Request;
-import ru.practicum.request.model.RequestStatus;
+import ru.practicum.request.dto.RequestStatus;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.feign.UserServiceClient;

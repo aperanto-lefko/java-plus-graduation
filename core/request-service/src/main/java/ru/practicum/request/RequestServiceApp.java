@@ -1,20 +1,15 @@
-package ru.practicum.user;
-
+package ru.practicum.request;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
-
-
-@SpringBootApplication(scanBasePackages = "ru.practicum.user")
+@SpringBootApplication(scanBasePackages = "ru.practicum.request")
 @EnableDiscoveryClient
 @ConfigurationPropertiesScan
-public class UserServiceApp {
-
+public class RequestServiceApp {
     public static void main(String[] args) {
-        SpringApplication.run(UserServiceApp.class, args);
+        SpringApplication.run(RequestServiceApp.class, args);
     }
-
 }
