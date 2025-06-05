@@ -10,15 +10,20 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.service.CategoryService;
-import ru.practicum.event.dto.*;
+import ru.practicum.event.dto.EventDtoGetParam;
+import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.EventShortDto;
+import ru.practicum.event.dto.NewEventDto;
+import ru.practicum.event.dto.UpdateEventAdminRequest;
+import ru.practicum.event.dto.UpdateEventUserRequest;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.mapper.LocationMapper;
 
 import ru.practicum.event.model.Event;
 import ru.practicum.event.model.Location;
 import ru.practicum.event.model.QEvent;
-import ru.practicum.event.model.State;
-import ru.practicum.event.model.StateAction;
+import ru.practicum.event.dto.State;
+import ru.practicum.event.dto.StateAction;
 import ru.practicum.event.repository.EventRepository;
 import ru.practicum.exception.ConflictStateException;
 import ru.practicum.exception.ConflictTimeException;
@@ -36,6 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 
 
 @Service
@@ -68,6 +74,7 @@ public class EventServiceImpl implements EventService {
         Predicate predicate = event.userId.eq(prm.getUserId());
         PageRequest pageRequest = PageRequest.of(prm.getFrom(), prm.getSize());
         List<Event> events = eventRepository.findAll(predicate, pageRequest).getContent();
+
         return toEventShortDtoAddUserList(events);
     }
 

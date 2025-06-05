@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.dto.EventDtoGetParam;
+
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
 import ru.practicum.event.service.EventService;
@@ -27,4 +28,5 @@ public class PublicEventController {
                                            HttpServletRequest rqt) {
         return eventService.getPublicEventById(id, rqt);
     }
+
 }

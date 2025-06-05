@@ -28,4 +28,5 @@ public class AdminEventController {
                                     @RequestBody @Valid UpdateEventAdminRequest rq) {
         return eventService.updateEventByAdmin(eventId, rq);
     }
+
 }

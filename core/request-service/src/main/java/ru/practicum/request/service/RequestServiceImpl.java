@@ -5,9 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import ru.practicum.event.model.Event;
-import ru.practicum.event.model.State;
-import ru.practicum.event.repository.EventRepository;
+import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.State;
+import ru.practicum.event.feign.EventServiceClient;
+
 import ru.practicum.exception.ConditionsNotMetException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
@@ -30,22 +31,21 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 public class RequestServiceImpl implements RequestService {
-    EventRepository eventRepository;
+    EventServiceClient eventServiceClient;
     RequestRepository requestRepository;
     RequestMapper requestMapper;
     UserServiceClient userServiceClient;
 
     @Override
     public ParticipationRequestDto createParticipationRequest(long userId, long eventId) {
-        Event event = eventRepository.findById(eventId).orElseThrow(
-                () -> new NotFoundException(String.format("Событие с id=%d не найдено", eventId))
-        );
+
+        EventFullDto event = eventServiceClient.getPublicEventById(eventId);
 
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new ConditionsNotMetException("Нельзя участвовать в неопубликованном событии");
         }
 
-        if (event.getUserId().equals(userId)) {
+        if (event.getInitiator().getId().equals(userId)) {
             throw new ConditionsNotMetException("Инициатор события не может добавить запрос на участие в своём событии");
         }
 
@@ -56,12 +56,12 @@ public class RequestServiceImpl implements RequestService {
         RequestStatus status = RequestStatus.PENDING;
         if (event.getParticipantLimit() == 0) {
             status = RequestStatus.CONFIRMED;
-        } else if (!event.getRequestModeration()) {
+        } else if (!event.isRequestModeration()) {
             status = RequestStatus.CONFIRMED;
         }
 
         Request request = Request.builder()
-                .event(event)
+                .eventId(event.getId())
                 .userId(userId)
                 .status(status)
                 .created(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
@@ -90,9 +90,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public EventRequestStatusUpdateResult changeEventRequestsStatusByInitiator(EventRequestStatusUpdateRequest updateRequest, long userId, long eventId) {
-        Event event = eventRepository.findById(eventId).orElseThrow(
-                () -> new NotFoundException(String.format("Событие с id=%d не найдено", eventId))
-        );
+        EventFullDto event = eventServiceClient.getPublicEventById(eventId);
 
         List<Long> requestIds = updateRequest.getRequestIds();
         List<Request> foundRequests = requestRepository.findAllById(requestIds);
@@ -148,10 +146,10 @@ public class RequestServiceImpl implements RequestService {
         requestRepository.updateStatus(status, ids);
     }
 
-    private void handleConfirmedRequests(Event event, List<Request> foundRequests, EventRequestStatusUpdateResult result, List<ParticipationRequestDto> confirmed, List<ParticipationRequestDto> rejected) {
+    private void handleConfirmedRequests(EventFullDto event, List<Request> foundRequests, EventRequestStatusUpdateResult result, List<ParticipationRequestDto> confirmed, List<ParticipationRequestDto> rejected) {
         int confirmedRequests = getConfirmedRequests(event.getId());
         int participantLimit = event.getParticipantLimit();
-        if (participantLimit == 0 || !event.getRequestModeration()) {
+        if (participantLimit == 0 || !event.isRequestModeration()) {
             result.setConfirmedRequests(requestMapper.toDtoList(foundRequests));
             return;
         }

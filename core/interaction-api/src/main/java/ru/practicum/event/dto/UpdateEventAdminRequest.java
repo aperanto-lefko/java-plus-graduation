@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.event.model.StateAction;
 import ru.practicum.event.validate.TimeAtLeastTwoHours;
 
 import java.time.LocalDateTime;
@@ -16,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateEventUserRequest {
+public class UpdateEventAdminRequest {
     @Size(min = 20, max = 2000)
     private String annotation;
     private Long category;

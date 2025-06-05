@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.Formula;
 import ru.practicum.category.model.Category;
+import ru.practicum.event.dto.State;
 import ru.practicum.event.validate.TimeAtLeastTwoHours;
 
 
