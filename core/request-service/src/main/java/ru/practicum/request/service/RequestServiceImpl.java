@@ -26,6 +26,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -166,6 +168,16 @@ public class RequestServiceImpl implements RequestService {
         List<Long> confirmedRequestIds = confirmed.stream().map(ParticipationRequestDto::getId).toList();
         updateStatus(RequestStatus.CONFIRMED, confirmedRequestIds);
     }
+    //добавлено
+    public Map<Long, Integer> getConfirmedRequestsCounts(long userId, List<Long> eventIds) {
+        List<Object[]> counts = requestRepository.countConfirmedRequestsByEventIds(userId, eventIds);
+        return counts.stream()
+                .collect(Collectors.toMap(
+                        arr -> (Long) arr[0],
+                        arr -> ((Number) arr[1]).intValue()
+                ));
+
+    }
 
     private void handleRejectedRequests(List<Request> foundRequests, EventRequestStatusUpdateResult result, List<ParticipationRequestDto> rejected) {
         for (Request request : foundRequests) {
@@ -182,5 +194,6 @@ public class RequestServiceImpl implements RequestService {
         }
         return user;
     }
+
 
 }

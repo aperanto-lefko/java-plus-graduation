@@ -5,6 +5,7 @@ import ru.practicum.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.request.dto.ParticipationRequestDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RequestService {
     ParticipationRequestDto createParticipationRequest(long userId, long eventId);
@@ -16,4 +17,6 @@ public interface RequestService {
     EventRequestStatusUpdateResult changeEventRequestsStatusByInitiator(EventRequestStatusUpdateRequest updateRequest, long userId, long eventId);
 
     ParticipationRequestDto cancelParticipantRequest(long userId, long requestId);
+
+    Map<Long, Integer> getConfirmedRequestsCounts(long serId, List<Long> eventIds);
 }

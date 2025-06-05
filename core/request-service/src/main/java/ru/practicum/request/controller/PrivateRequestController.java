@@ -11,6 +11,7 @@ import ru.practicum.request.dto.ParticipationRequestDto;
 import ru.practicum.request.service.RequestService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -57,4 +58,12 @@ public class PrivateRequestController {
         var response = requestService.changeEventRequestsStatusByInitiator(updateRequest, userId, eventId);
         return response;
     }
+//добавлено
+    @GetMapping("/requests/count-confirmed")
+    @ResponseStatus(HttpStatus.OK)
+    public Map<Long, Integer> getConfirmedRequest(@PathVariable(name = "userId") @Positive long userId,
+                                                  @RequestParam List<Long> eventIds) {
+        return requestService.getConfirmedRequestsCounts(userId, eventIds);
+    }
+
 }
