@@ -26,3 +26,5 @@ eureka:
 logging:
   level:
     org.springframework.boot.context.config: DEBUG
+    feign: DEBUG
+    org.springframework.cloud.openfeign: DEBUG

@@ -27,6 +27,9 @@ public class PublicEventController {
     public EventFullDto getPublicEventById(@PathVariable Long id,
                                            HttpServletRequest rqt) {
         return eventService.getPublicEventById(id, rqt);
+
     }
+
+
 
 }

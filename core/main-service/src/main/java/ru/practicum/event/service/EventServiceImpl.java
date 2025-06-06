@@ -29,6 +29,7 @@ import ru.practicum.exception.ConflictStateException;
 import ru.practicum.exception.ConflictTimeException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.exception.ValidationException;
+import ru.practicum.request.feign.RequestServiceClient;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.feign.UserServiceClient;
 
@@ -41,7 +42,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 
 
 @Service
@@ -57,6 +57,7 @@ public class EventServiceImpl implements EventService {
     private final LocationMapper lmp;
     private final QEvent event = QEvent.event;
     private final UserServiceClient userServiceClient;
+    private final RequestServiceClient requestServiceClient;
 
     @Transactional
     @Override
@@ -112,12 +113,24 @@ public class EventServiceImpl implements EventService {
         }
         PageRequest pageRequest = PageRequest.of(prm.getFrom(), prm.getSize());
         List<Event> events;
+        log.info("Получение списка событий администратором с параметрами {} и предикатом {}", prm, predicate);
         events = (predicate == null)
                 ? eventRepository.findAll(pageRequest).getContent()
                 : eventRepository.findAll(predicate, pageRequest).getContent();
-        log.info("Получение списка событий администратором с параметрами {} и предикатом {}", prm, predicate);
 
-        return toEventFullDtoAddUserList(events);
+        Map<Long, Integer> confirmedRequestsMap;
+        if (!events.isEmpty()) {
+            List<Long> eventIds = events.stream().map(Event::getId).toList();
+            confirmedRequestsMap = requestServiceClient.getConfirmedRequest(eventIds);
+        } else {
+            confirmedRequestsMap = Collections.emptyMap();
+        }
+        List<EventFullDto> dtos = toEventFullDtoAddUserList(events);
+
+        dtos.forEach(dto ->
+                dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(dto.getId(), 0)));
+
+        return dtos;
     }
 
     @Override
@@ -192,10 +205,10 @@ public class EventServiceImpl implements EventService {
         } else {
             predicate = ExpressionUtils.and(predicate, event.eventDate.gt(LocalDateTime.now())); //TODO: проверить
         }
-        if (prm.getOnlyAvailable() != null && prm.getOnlyAvailable()) { //проверка есть ли еще места на мероприятие
-            predicate = ExpressionUtils.and(predicate, (event.participantLimit.eq(0)).or(
-                    event.participantLimit.subtract(event.confirmedRequests).gt(0)));
-        }
+//        if (prm.getOnlyAvailable() != null && prm.getOnlyAvailable()) { //проверка есть ли еще места на мероприятие
+//            predicate = ExpressionUtils.and(predicate, (event.participantLimit.eq(0)).or(
+//                    event.participantLimit.subtract(event.confirmedRequests).gt(0)));
+//        }
         Sort sort = Sort.unsorted();
         if (prm.getSort() != null) {
             if (prm.getSort().equals("EVENT_DATE")) {
@@ -204,11 +217,35 @@ public class EventServiceImpl implements EventService {
                 sort = Sort.by(Sort.Direction.DESC, "views");
             }
         }
+
         PageRequest pageRequest = PageRequest.of(prm.getFrom(), prm.getSize(), sort);
         List<Event> events = eventRepository.findAll(predicate, pageRequest).getContent();
+
+        //добавлено
+        if (prm.getOnlyAvailable() != null && prm.getOnlyAvailable() && !events.isEmpty()) {
+            Long userId = prm.getUserId();
+            List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+
+//            Map<Long, Integer> confirmedCounts = requestServiceClient.getConfirmedRequestsCounts(
+//                    userId,
+//                    eventIds
+//            );
+            Map<Long, Integer> confirmedCounts = requestServiceClient.getConfirmedRequest(eventIds);
+
+
+            events = events.stream()
+                    .filter(event -> {
+                        int confirmed = confirmedCounts.getOrDefault(event.getId(), 0);
+                        return event.getParticipantLimit() == 0 ||
+                                event.getParticipantLimit() > confirmed;
+                    })
+                    .collect(Collectors.toList());
+        }
+        //добавлено
         if (!events.isEmpty()) {
             viewService.saveViews(events, rqt);
         }
+
         return toEventShortDtoAddUserList(events);
     }
 
@@ -220,6 +257,26 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Событие с id %d не найдено.", id)));
         viewService.saveView(ev, rqt);
+        return addUserShortDtoToFullDto(ev, ev.getUserId());
+    }
+
+    //новый для request service
+    @Override
+    @Transactional
+    public EventFullDto getEventById(Long id, HttpServletRequest rqt) {
+        Event ev = eventRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        String.format("Событие с id %d не найдено.", id)));
+
+//        viewService.saveView(ev, rqt);
+        return addUserShortDtoToFullDto(ev, ev.getUserId());
+    }
+
+    //новый для request service
+    @Override
+    public EventFullDto getByIdAndInitiator(Long eventId, Long userId) {
+        Event ev = eventRepository.findByIdAndUserId(eventId, userId)
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с id %d и userId %d не найдено.", eventId, userId)));
         return addUserShortDtoToFullDto(ev, ev.getUserId());
     }
 
@@ -239,6 +296,7 @@ public class EventServiceImpl implements EventService {
             throw new ValidationException("Дата начала события позже даты окончания");
         }
     }
+
     private UserShortDto getUserById(Long userId) {
         UserShortDto user = userServiceClient.getUserById(userId).getBody();
         if (user == null) {

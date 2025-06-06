@@ -15,8 +15,8 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     List<Request> findAllByUserId(long userId);
 
+    List<Request> findAllByEventId(long eventId);
 
-    List<Request> findAllByUserIdAndEventId(long userId, long eventId);
 
     @Query("select count(r) from Request r where r.eventId = :eventId and r.status = 'CONFIRMED'")
     int findCountOfConfirmedRequestsByEventId(long eventId);
@@ -28,11 +28,18 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     void updateStatus(RequestStatus status, List<Long> ids);
 
     //добавлено
+//    @Query("SELECT r.eventId, COUNT(r) " +
+//            "FROM Request r " +
+//            "WHERE r.userId = :userId AND r.eventId IN :eventIds AND r.status = 'CONFIRMED' " +
+//            "GROUP BY r.eventId")
+//    List<Object[]> countConfirmedRequestsByEventIds(
+//            @Param("userId") Long userId,
+//            @Param("eventIds") List<Long> eventIds);
+//}
     @Query("SELECT r.eventId, COUNT(r) " +
             "FROM Request r " +
-            "WHERE r.userId = :userId AND r.eventId IN :eventIds AND r.status = 'CONFIRMED' " +
+            "WHERE r.eventId IN :eventIds " +
+            "AND r.status = 'CONFIRMED' " +
             "GROUP BY r.eventId")
-    List<Object[]> countConfirmedRequestsByEventIds(
-            @Param("userId") Long userId,
-            @Param("eventIds") List<Long> eventIds);
+    List<Object[]> countConfirmedRequestsByEventIds(@Param("eventIds") List<Long> eventIds);
 }

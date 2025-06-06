@@ -12,10 +12,15 @@ import java.util.Map;
 @Component
 @Slf4j
 public class RequestServiceFallback {
-    public Map<Long, Integer> getConfirmedRequestsCounts(
-            @PathVariable("userId") Long userId,
-            @RequestParam("eventIds") List<Long> eventIds) {
-        log.warn("Активирован резервный вариант для getConfirmedRequestsCounts для запроса  с userId {} и eventIв {}", userId, eventIds);
+//    public Map<Long, Integer> getConfirmedRequestsCounts(
+//            @PathVariable("userId") Long userId,
+//            @RequestParam("eventIds") List<Long> eventIds) {
+//        log.warn("Активирован резервный вариант для getConfirmedRequestsCounts для запроса  с userId {} и eventIв {}", userId, eventIds);
+//        throw new ServiceUnavailableException("RequestService недоступен");
+//    }
+
+      public Map<Long, Integer> getConfirmedRequest(@RequestParam List<Long> eventIds) {
+          log.warn("Активирован резервный вариант для getConfirmedRequest для запроса  c eventIв {}", eventIds);
         throw new ServiceUnavailableException("RequestService недоступен");
-    }
+      }
 }

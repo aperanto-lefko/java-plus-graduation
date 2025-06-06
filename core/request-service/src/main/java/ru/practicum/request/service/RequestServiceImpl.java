@@ -1,5 +1,6 @@
 package ru.practicum.request.service;
 
+import feign.FeignException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,6 +26,7 @@ import ru.practicum.user.feign.UserServiceClient;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,7 +43,7 @@ public class RequestServiceImpl implements RequestService {
     @Override
     public ParticipationRequestDto createParticipationRequest(long userId, long eventId) {
 
-        EventFullDto event = eventServiceClient.getPublicEventById(eventId);
+        EventFullDto event = eventServiceClient.getEventById(eventId);
 
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new ConditionsNotMetException("Нельзя участвовать в неопубликованном событии");
@@ -86,13 +88,22 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public List<ParticipationRequestDto> getAllByInitiatorIdAndEventId(long userId, long eventId) {
-        List<Request> foundRequests = requestRepository.findAllByUserIdAndEventId(userId, eventId);
-        return requestMapper.toDtoList(foundRequests);
-    }
+       EventFullDto event;
+        try {
+            event = eventServiceClient.getEventByIdAndInitiator(eventId, userId);
+        } catch (FeignException.NotFound ex) {
+            throw new NotFoundException(
+                    String.format("Событие с id %d для пользователя с id %d не найдено", eventId, userId)
+            );
+        }
+            List<Request> foundRequests = requestRepository.findAllByEventId(event.getId());
+            return requestMapper.toDtoList(foundRequests);
+        }
+
 
     @Override
     public EventRequestStatusUpdateResult changeEventRequestsStatusByInitiator(EventRequestStatusUpdateRequest updateRequest, long userId, long eventId) {
-        EventFullDto event = eventServiceClient.getPublicEventById(eventId);
+        EventFullDto event = eventServiceClient.getEventById(eventId);
 
         List<Long> requestIds = updateRequest.getRequestIds();
         List<Request> foundRequests = requestRepository.findAllById(requestIds);
@@ -168,15 +179,30 @@ public class RequestServiceImpl implements RequestService {
         List<Long> confirmedRequestIds = confirmed.stream().map(ParticipationRequestDto::getId).toList();
         updateStatus(RequestStatus.CONFIRMED, confirmedRequestIds);
     }
+
     //добавлено
-    public Map<Long, Integer> getConfirmedRequestsCounts(long userId, List<Long> eventIds) {
-        List<Object[]> counts = requestRepository.countConfirmedRequestsByEventIds(userId, eventIds);
+//    public Map<Long, Integer> getConfirmedRequestsCounts(long userId, List<Long> eventIds) {
+//        List<Object[]> counts = requestRepository.countConfirmedRequestsByEventIds(userId, eventIds);
+//        return counts.stream()
+//                .collect(Collectors.toMap(
+//                        arr -> (Long) arr[0],
+//                        arr -> ((Number) arr[1]).intValue()
+//                ));
+//
+//    }
+    @Override
+    public Map<Long, Integer> getConfirmedRequestsCounts(List<Long> eventIds) {
+        if (eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Object[]> counts = requestRepository.countConfirmedRequestsByEventIds(eventIds);
+
         return counts.stream()
                 .collect(Collectors.toMap(
-                        arr -> (Long) arr[0],
-                        arr -> ((Number) arr[1]).intValue()
+                        arr -> (Long) arr[0],  // eventId
+                        arr -> ((Number) arr[1]).intValue()  // count
                 ));
-
     }
 
     private void handleRejectedRequests(List<Request> foundRequests, EventRequestStatusUpdateResult result, List<ParticipationRequestDto> rejected) {
@@ -187,6 +213,7 @@ public class RequestServiceImpl implements RequestService {
         List<Long> rejectedRequestIds = rejected.stream().map(ParticipationRequestDto::getId).toList();
         updateStatus(RequestStatus.REJECTED, rejectedRequestIds);
     }
+
     private UserShortDto getUserById(Long userId) {
         UserShortDto user = userServiceClient.getUserById(userId).getBody();
         if (user == null) {

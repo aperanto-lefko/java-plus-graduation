@@ -7,10 +7,15 @@ spring:
             uri: lb://user-service
             predicates:
               - Path=/admin/users/**
-          - id: request_service_route
+          - id: request_service_user_requests
             uri: lb://request-service
             predicates:
               - Path=/users/*/requests/**
+
+          - id: request_service_event_requests
+            uri: lb://request-service
+            predicates:
+              - Path=/users/*/events/*/requests
           - id: main_service_route
             uri: lb://main-service
             predicates:

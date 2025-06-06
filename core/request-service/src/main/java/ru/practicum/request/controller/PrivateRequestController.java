@@ -15,11 +15,11 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/users/{userId}")
+@RequestMapping //("/users/{userId}")
 public class PrivateRequestController {
     private final RequestService requestService;
 
-    @PostMapping("/requests")
+    @PostMapping("/users/{userId}/requests")
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto create(@PathVariable(name = "userId") @Positive long userId,
                                           @RequestParam(name = "eventId") @Positive long eventId) {
@@ -27,14 +27,14 @@ public class PrivateRequestController {
         return response;
     }
 
-    @GetMapping("/requests")
+    @GetMapping("/users/{userId}/requests")
     @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getAllByParticipantId(@PathVariable(name = "userId") @Positive long userId) {
         var response = requestService.getAllByParticipantId(userId);
         return response;
     }
 
-    @PatchMapping("/requests/{requestId}/cancel")
+    @PatchMapping("/users/{userId}/requests/{requestId}/cancel")
     @ResponseStatus(HttpStatus.OK)
     public ParticipationRequestDto cancelParticipantRequest(@PathVariable(name = "userId") @Positive long userId,
                                                             @PathVariable(name = "requestId") @Positive long requestId) {
@@ -42,7 +42,7 @@ public class PrivateRequestController {
         return response;
     }
 
-    @GetMapping("/events/{eventId}/requests")
+    @GetMapping("/users/{userId}/events/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getAllEventsOfInitiator(@PathVariable(name = "userId") @Positive long userId,
                                                                  @PathVariable(name = "eventId") @Positive long eventId) {
@@ -50,7 +50,7 @@ public class PrivateRequestController {
         return response;
     }
 
-    @PatchMapping("/events/{eventId}/requests")
+    @PatchMapping("/users/{userId}/events/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResult changeEventRequestsStatus(@PathVariable(name = "userId") @Positive long userId,
                                                                     @PathVariable(name = "eventId") @Positive long eventId,
@@ -58,12 +58,19 @@ public class PrivateRequestController {
         var response = requestService.changeEventRequestsStatusByInitiator(updateRequest, userId, eventId);
         return response;
     }
-//добавлено
+
+    //добавлено
+//    @GetMapping("/requests/count-confirmed")
+//    @ResponseStatus(HttpStatus.OK)
+//    public Map<Long, Integer> getConfirmedRequest(@PathVariable(name = "userId") @Positive long userId,
+//                                                  @RequestParam List<Long> eventIds) {
+//        return requestService.getConfirmedRequestsCounts(userId, eventIds);
+//    }
     @GetMapping("/requests/count-confirmed")
     @ResponseStatus(HttpStatus.OK)
-    public Map<Long, Integer> getConfirmedRequest(@PathVariable(name = "userId") @Positive long userId,
-                                                  @RequestParam List<Long> eventIds) {
-        return requestService.getConfirmedRequestsCounts(userId, eventIds);
+    public Map<Long, Integer> getConfirmedRequest(@RequestParam List<Long> eventIds) {
+        return requestService.getConfirmedRequestsCounts(eventIds);
     }
+
 
 }

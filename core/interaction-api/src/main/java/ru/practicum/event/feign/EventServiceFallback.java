@@ -9,8 +9,14 @@ import ru.practicum.exception.ServiceUnavailableException;
 @Component
 @Slf4j
 public class EventServiceFallback {
-    public EventFullDto getPublicEventById(@PathVariable Long id) {
-        log.warn("Активирован резервный вариант для getPublicEventById для события с id {} ", id);
+    public EventFullDto getEventById(@PathVariable Long id) {
+        log.warn("Активирован резервный вариант для getEventById для события с id {} ", id);
+        throw new ServiceUnavailableException("EventService недоступен");
+    }
+
+    public EventFullDto getEventByIdAndInitiator(@PathVariable Long eventId,
+                                                 @PathVariable Long userId) {
+        log.warn("Активирован резервный вариант для getEventByIdAndInitiator для события с id {} ", eventId);
         throw new ServiceUnavailableException("EventService недоступен");
     }
 }
