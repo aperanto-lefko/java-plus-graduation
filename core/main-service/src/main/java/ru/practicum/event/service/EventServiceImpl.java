@@ -33,7 +33,6 @@ import ru.practicum.request.feign.RequestServiceClient;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.feign.UserServiceClient;
 
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
