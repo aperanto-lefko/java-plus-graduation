@@ -75,7 +75,14 @@ public class EventServiceImpl implements EventService {
         PageRequest pageRequest = PageRequest.of(prm.getFrom(), prm.getSize());
         List<Event> events = eventRepository.findAll(predicate, pageRequest).getContent();
 
-        return toEventShortDtoAddUserList(events);
+
+        //добавление подтвержденных просмотров
+        Map<Long, Integer> confirmedRequestsMap = getConfirmedRequestMap(events);
+        List<EventShortDto> dtos = toEventShortDtoAddUserList(events);
+        dtos.forEach(dto ->
+                dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(dto.getId(), 0)));
+
+        return dtos;
     }
 
     @Override
@@ -87,7 +94,15 @@ public class EventServiceImpl implements EventService {
                         String.format("Событие с id %d для пользователя с id %d не найдено.",
                                 prm.getEventId(), prm.getUserId())));
         log.info("Получение события с id {}  для пользователя с id {}", prm.getEventId(), prm.getUserId());
-        return addUserShortDtoToFullDto(ev, prm.getUserId());
+        //return addUserShortDtoToFullDto(ev, prm.getUserId());
+
+        //добавление подтвержденных просмотров
+        int confirmedRequests = requestServiceClient.getConfirmedRequest(List.of(ev.getId()))
+                .getOrDefault(ev.getId(), 0);
+
+        EventFullDto dto = addUserShortDtoToFullDto(ev, prm.getUserId());
+        dto.setConfirmedRequests(confirmedRequests);
+        return dto;
     }
 
 
@@ -117,15 +132,8 @@ public class EventServiceImpl implements EventService {
                 ? eventRepository.findAll(pageRequest).getContent()
                 : eventRepository.findAll(predicate, pageRequest).getContent();
 
-        Map<Long, Integer> confirmedRequestsMap;
-        if (!events.isEmpty()) {
-            List<Long> eventIds = events.stream().map(Event::getId).toList();
-            confirmedRequestsMap = requestServiceClient.getConfirmedRequest(eventIds);
-        } else {
-            confirmedRequestsMap = Collections.emptyMap();
-        }
+        Map<Long, Integer> confirmedRequestsMap = getConfirmedRequestMap(events);
         List<EventFullDto> dtos = toEventFullDtoAddUserList(events);
-
         dtos.forEach(dto ->
                 dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(dto.getId(), 0)));
 
@@ -154,7 +162,13 @@ public class EventServiceImpl implements EventService {
         ev.setState(rq.getStateAction() == StateAction.PUBLISH_EVENT ? State.PUBLISHED : State.CANCELED);
         log.info("Обновление события с id {} администратором с параметрами {}", id, rq);
         Event savedEvent = eventRepository.save(ev);
-        return addUserShortDtoToFullDto(savedEvent, savedEvent.getUserId());
+
+        log.info("Запрос в requestService, добавление количества запросов");
+        int confirmedRequests = requestServiceClient.getConfirmedRequest(List.of(savedEvent.getId()))
+                .getOrDefault(ev.getId(), 0);
+        EventFullDto eventFullDto = addUserShortDtoToFullDto(savedEvent, savedEvent.getUserId());
+        eventFullDto.setConfirmedRequests(confirmedRequests);
+        return eventFullDto;
     }
 
     @Override
@@ -181,7 +195,11 @@ public class EventServiceImpl implements EventService {
         }
         mp.updateFromUser(rq, ev);
         Event savedEvent = eventRepository.save(ev);
-        return addUserShortDtoToFullDto(savedEvent, savedEvent.getUserId());
+        int confirmedRequests = requestServiceClient.getConfirmedRequest(List.of(savedEvent.getId()))
+                .getOrDefault(ev.getId(), 0);
+        EventFullDto eventFullDto = addUserShortDtoToFullDto(savedEvent, savedEvent.getUserId());
+        eventFullDto.setConfirmedRequests(confirmedRequests);
+        return eventFullDto;
     }
 
     @Override
@@ -217,16 +235,12 @@ public class EventServiceImpl implements EventService {
         PageRequest pageRequest = PageRequest.of(prm.getFrom(), prm.getSize(), sort);
         List<Event> events = eventRepository.findAll(predicate, pageRequest).getContent();
 
+        List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
+        Map<Long, Integer> confirmedRequestsMap = requestServiceClient.getConfirmedRequest(eventIds);
         if (prm.getOnlyAvailable() != null && prm.getOnlyAvailable() && !events.isEmpty()) {
-            Long userId = prm.getUserId();
-            List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
-
-            Map<Long, Integer> confirmedCounts = requestServiceClient.getConfirmedRequest(eventIds);
-
-
             events = events.stream()
                     .filter(event -> {
-                        int confirmed = confirmedCounts.getOrDefault(event.getId(), 0);
+                        int confirmed = confirmedRequestsMap.getOrDefault(event.getId(), 0);
                         return event.getParticipantLimit() == 0 ||
                                 event.getParticipantLimit() > confirmed;
                     })
@@ -237,7 +251,11 @@ public class EventServiceImpl implements EventService {
             viewService.saveViews(events, rqt);
         }
 
-        return toEventShortDtoAddUserList(events);
+        List<EventShortDto> dtos = toEventShortDtoAddUserList(events);
+        dtos.forEach(dto ->
+                dto.setConfirmedRequests(confirmedRequestsMap.getOrDefault(dto.getId(), 0)));
+
+        return dtos;
     }
 
     @Override
@@ -248,7 +266,11 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Событие с id %d не найдено.", id)));
         viewService.saveView(ev, rqt);
-        return addUserShortDtoToFullDto(ev, ev.getUserId());
+        int confirmedRequests = requestServiceClient.getConfirmedRequest(List.of(ev.getId()))
+                .getOrDefault(ev.getId(), 0);
+        EventFullDto eventFullDto = addUserShortDtoToFullDto(ev, ev.getUserId());
+        eventFullDto.setConfirmedRequests(confirmedRequests);
+        return eventFullDto;
     }
 
     // для request service
@@ -258,7 +280,6 @@ public class EventServiceImpl implements EventService {
         Event ev = eventRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Событие с id %d не найдено.", id)));
-
         return addUserShortDtoToFullDto(ev, ev.getUserId());
     }
 
@@ -336,6 +357,18 @@ public class EventServiceImpl implements EventService {
         UserShortDto userDto = userServiceClient.getUserById(userId).getBody();
         dto.setInitiator(userDto);
         return dto;
+    }
+
+    private Map<Long, Integer> getConfirmedRequestMap(List<Event> events) {
+        log.info("Запрос в requestService, добавление количества запросов для {}", events);
+        Map<Long, Integer> confirmedRequestsMap;
+        if (!events.isEmpty()) {
+            List<Long> eventIds = events.stream().map(Event::getId).toList();
+            confirmedRequestsMap = requestServiceClient.getConfirmedRequest(eventIds);
+        } else {
+            confirmedRequestsMap = Collections.emptyMap();
+        }
+        return confirmedRequestsMap;
     }
 }
 
