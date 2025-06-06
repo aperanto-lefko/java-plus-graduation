@@ -100,7 +100,6 @@ public class RequestServiceImpl implements RequestService {
             return requestMapper.toDtoList(foundRequests);
         }
 
-
     @Override
     public EventRequestStatusUpdateResult changeEventRequestsStatusByInitiator(EventRequestStatusUpdateRequest updateRequest, long userId, long eventId) {
         EventFullDto event = eventServiceClient.getEventById(eventId);
@@ -180,24 +179,12 @@ public class RequestServiceImpl implements RequestService {
         updateStatus(RequestStatus.CONFIRMED, confirmedRequestIds);
     }
 
-    //добавлено
-//    public Map<Long, Integer> getConfirmedRequestsCounts(long userId, List<Long> eventIds) {
-//        List<Object[]> counts = requestRepository.countConfirmedRequestsByEventIds(userId, eventIds);
-//        return counts.stream()
-//                .collect(Collectors.toMap(
-//                        arr -> (Long) arr[0],
-//                        arr -> ((Number) arr[1]).intValue()
-//                ));
-//
-//    }
     @Override
     public Map<Long, Integer> getConfirmedRequestsCounts(List<Long> eventIds) {
         if (eventIds.isEmpty()) {
             return Collections.emptyMap();
         }
-
         List<Object[]> counts = requestRepository.countConfirmedRequestsByEventIds(eventIds);
-
         return counts.stream()
                 .collect(Collectors.toMap(
                         arr -> (Long) arr[0],  // eventId
@@ -221,6 +208,4 @@ public class RequestServiceImpl implements RequestService {
         }
         return user;
     }
-
-
 }

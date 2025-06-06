@@ -205,10 +205,7 @@ public class EventServiceImpl implements EventService {
         } else {
             predicate = ExpressionUtils.and(predicate, event.eventDate.gt(LocalDateTime.now())); //TODO: проверить
         }
-//        if (prm.getOnlyAvailable() != null && prm.getOnlyAvailable()) { //проверка есть ли еще места на мероприятие
-//            predicate = ExpressionUtils.and(predicate, (event.participantLimit.eq(0)).or(
-//                    event.participantLimit.subtract(event.confirmedRequests).gt(0)));
-//        }
+
         Sort sort = Sort.unsorted();
         if (prm.getSort() != null) {
             if (prm.getSort().equals("EVENT_DATE")) {
@@ -221,15 +218,10 @@ public class EventServiceImpl implements EventService {
         PageRequest pageRequest = PageRequest.of(prm.getFrom(), prm.getSize(), sort);
         List<Event> events = eventRepository.findAll(predicate, pageRequest).getContent();
 
-        //добавлено
         if (prm.getOnlyAvailable() != null && prm.getOnlyAvailable() && !events.isEmpty()) {
             Long userId = prm.getUserId();
             List<Long> eventIds = events.stream().map(Event::getId).collect(Collectors.toList());
 
-//            Map<Long, Integer> confirmedCounts = requestServiceClient.getConfirmedRequestsCounts(
-//                    userId,
-//                    eventIds
-//            );
             Map<Long, Integer> confirmedCounts = requestServiceClient.getConfirmedRequest(eventIds);
 
 
@@ -241,7 +233,7 @@ public class EventServiceImpl implements EventService {
                     })
                     .collect(Collectors.toList());
         }
-        //добавлено
+
         if (!events.isEmpty()) {
             viewService.saveViews(events, rqt);
         }
@@ -260,7 +252,7 @@ public class EventServiceImpl implements EventService {
         return addUserShortDtoToFullDto(ev, ev.getUserId());
     }
 
-    //новый для request service
+    // для request service
     @Override
     @Transactional
     public EventFullDto getEventById(Long id, HttpServletRequest rqt) {
@@ -268,11 +260,10 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException(
                         String.format("Событие с id %d не найдено.", id)));
 
-//        viewService.saveView(ev, rqt);
         return addUserShortDtoToFullDto(ev, ev.getUserId());
     }
 
-    //новый для request service
+    //для request service
     @Override
     public EventFullDto getByIdAndInitiator(Long eventId, Long userId) {
         Event ev = eventRepository.findByIdAndUserId(eventId, userId)

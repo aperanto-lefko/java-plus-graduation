@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping //("/users/{userId}")
+@RequestMapping
 public class PrivateRequestController {
     private final RequestService requestService;
 
@@ -59,18 +59,10 @@ public class PrivateRequestController {
         return response;
     }
 
-    //добавлено
-//    @GetMapping("/requests/count-confirmed")
-//    @ResponseStatus(HttpStatus.OK)
-//    public Map<Long, Integer> getConfirmedRequest(@PathVariable(name = "userId") @Positive long userId,
-//                                                  @RequestParam List<Long> eventIds) {
-//        return requestService.getConfirmedRequestsCounts(userId, eventIds);
-//    }
     @GetMapping("/requests/count-confirmed")
     @ResponseStatus(HttpStatus.OK)
     public Map<Long, Integer> getConfirmedRequest(@RequestParam List<Long> eventIds) {
         return requestService.getConfirmedRequestsCounts(eventIds);
     }
-
 
 }

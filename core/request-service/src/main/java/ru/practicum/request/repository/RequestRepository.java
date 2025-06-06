@@ -27,15 +27,7 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     @Query("UPDATE Request r SET r.status = :status WHERE r.id IN :ids")
     void updateStatus(RequestStatus status, List<Long> ids);
 
-    //добавлено
-//    @Query("SELECT r.eventId, COUNT(r) " +
-//            "FROM Request r " +
-//            "WHERE r.userId = :userId AND r.eventId IN :eventIds AND r.status = 'CONFIRMED' " +
-//            "GROUP BY r.eventId")
-//    List<Object[]> countConfirmedRequestsByEventIds(
-//            @Param("userId") Long userId,
-//            @Param("eventIds") List<Long> eventIds);
-//}
+
     @Query("SELECT r.eventId, COUNT(r) " +
             "FROM Request r " +
             "WHERE r.eventId IN :eventIds " +

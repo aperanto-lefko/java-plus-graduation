@@ -33,5 +33,6 @@ public interface EventService {
     List<Event> getAllEventByIds(List<Long> ids);
 
     EventFullDto getEventById(Long id, HttpServletRequest rqt);
+
     EventFullDto getByIdAndInitiator(Long eventId, Long userId);
 }
