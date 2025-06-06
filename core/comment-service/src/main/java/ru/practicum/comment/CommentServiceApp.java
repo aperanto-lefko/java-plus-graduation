@@ -1,0 +1,15 @@
+package ru.practicum.comment;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+@SpringBootApplication(scanBasePackages = "ru.practicum.comment")
+@EnableDiscoveryClient
+@ConfigurationPropertiesScan
+public class CommentServiceApp {
+    public static void main(String[] args) {
+        SpringApplication.run(CommentServiceApp.class, args);
+    }
+}

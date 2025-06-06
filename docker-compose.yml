@@ -37,6 +37,23 @@ services:
     networks:
       - ewm-net
 
+  comment-db:
+    image: postgres:16.1
+    container_name: postgres-comment-db
+    ports:
+      - "6546:5432"
+    environment:
+      - POSTGRES_PASSWORD=comment
+      - POSTGRES_USER=comment
+      - POSTGRES_DB=comments
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      timeout: 10s
+      interval: 10s
+      retries: 15
+    networks:
+      - ewm-net
+
   request-db:
     image: postgres:16.1
     container_name: postgres-request-db
