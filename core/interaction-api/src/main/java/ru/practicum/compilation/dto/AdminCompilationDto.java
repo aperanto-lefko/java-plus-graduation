@@ -4,8 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import ru.practicum.validation.CreateValidationGroup;
-import ru.practicum.validation.UpdateValidationGroup;
+import ru.practicum.compilation.validation.CreateValidationGroup;
+import ru.practicum.compilation.validation.UpdateValidationGroup;
 
 import java.util.ArrayList;
 import java.util.List;

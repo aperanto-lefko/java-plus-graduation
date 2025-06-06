@@ -7,8 +7,8 @@ import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 import ru.practicum.user.dto.UserShortDto;
-import ru.practicum.validation.CreateValidationGroup;
-import ru.practicum.validation.UpdateValidationGroup;
+import ru.practicum.compilation.validation.CreateValidationGroup;
+import ru.practicum.compilation.validation.UpdateValidationGroup;
 
 import java.time.LocalDateTime;
 import java.util.List;

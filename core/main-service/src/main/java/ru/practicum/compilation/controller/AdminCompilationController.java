@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.compilation.dto.AdminCompilationDto;
 import ru.practicum.compilation.dto.CompilationDto;
 import ru.practicum.compilation.service.CompilationService;
-import ru.practicum.validation.CreateValidationGroup;
-import ru.practicum.validation.UpdateValidationGroup;
+import ru.practicum.compilation.validation.CreateValidationGroup;
+import ru.practicum.compilation.validation.UpdateValidationGroup;
 
 @RestController
 @AllArgsConstructor

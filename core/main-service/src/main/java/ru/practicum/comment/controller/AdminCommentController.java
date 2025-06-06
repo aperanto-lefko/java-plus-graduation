@@ -6,7 +6,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.service.CommentService;
-import ru.practicum.validation.UpdateValidationGroup;
+import ru.practicum.compilation.validation.UpdateValidationGroup;
 
 @RestController
 @AllArgsConstructor
