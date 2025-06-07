@@ -18,7 +18,7 @@ public class RequestInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        statClient.hit(new HitDto("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(),
+        statClient.hit(new HitDto("ewm-event-service", request.getRequestURI(), request.getRemoteAddr(),
                 LocalDateTime.now()));
         return true;
     }

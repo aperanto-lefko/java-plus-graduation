@@ -3,7 +3,7 @@ stats-server:
 
 spring:
   application:
-    name: main-service
+    name: event-service
   jpa:
     hibernate:
       ddl-auto: none
@@ -15,9 +15,9 @@ spring:
       mode: always
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6543/main
-    username: main
-    password: main
+    url: jdbc:postgresql://localhost:6543/events
+    username: event
+    password: event
 
 #  config:
 #    activate:

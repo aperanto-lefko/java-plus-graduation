@@ -20,7 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/admin/users")
 public class UserController {
-    private static final String APP_NAME = "ewm-main-service";
 
     private final UserService userService;
 

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import ru.practicum.event.dto.EventFullDto;
 
 
-@FeignClient(name = "main-service", path = "/admin/events", fallbackFactory = EventServiceFallback.class)
+@FeignClient(name = "event-service", path = "/admin/events", fallbackFactory = EventServiceFallback.class)
 public interface EventServiceClient {
     @GetMapping("/{id}")
     EventFullDto getEventById(@PathVariable Long id);

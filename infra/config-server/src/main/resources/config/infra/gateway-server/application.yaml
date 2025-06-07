@@ -41,8 +41,8 @@ spring:
             predicates:
               - Path=/comments/*/replies
 
-          - id: main_service_route
-            uri: lb://main-service
+          - id: event_service_route
+            uri: lb://event-service
             predicates:
                - Path=/**
 
