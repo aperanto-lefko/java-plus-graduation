@@ -85,15 +85,6 @@ networks:
   ewm-net:
     driver: bridge
 
-#    ewm-service:
-#      build: main-server
-#      container_name: main-server
-#      ports:
-#        - "8080:8080"
-#      environment:
-#        - CLIENT_URL=http://stats-server:9090
-#        - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/main
-#        - SPRING_DATASOURCE_USERNAME=main
-#        - SPRING_DATASOURCE_PASSWORD=main
+
 
 
