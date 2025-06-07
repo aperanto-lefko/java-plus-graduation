@@ -42,8 +42,6 @@ public class Event {
     private String annotation;
     @Column(name = "description")
     private String description;
-//    @Formula("(SELECT COUNT(*) FROM requests r WHERE r.event_id = id AND r.status = 'CONFIRMED')")
-//    private int confirmedRequests;
     @Column(name = "participant_limit")
     //Ограничение на количество участников. Значение 0 - означает отсутствие ограничения
     private int participantLimit; //

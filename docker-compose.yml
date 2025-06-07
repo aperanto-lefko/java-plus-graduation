@@ -1,7 +1,5 @@
 services:
 
-
-
   user-db:
     image: postgres:16.1
     container_name: postgres-user-db
@@ -80,16 +78,6 @@ services:
       - POSTGRES_PASSWORD=event
       - POSTGRES_USER=event
       - POSTGRES_DB=events
-
-#  ewm-db:
-#      image: postgres:16.1
-#      container_name: postgres-main-db
-#      ports:
-#        - "6543:5432"
-#      environment:
-#        - POSTGRES_PASSWORD=main
-#        - POSTGRES_USER=main
-#        - POSTGRES_DB=main
 
 networks:
   ewm-net:

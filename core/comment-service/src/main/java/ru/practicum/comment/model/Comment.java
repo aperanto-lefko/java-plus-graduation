@@ -27,12 +27,8 @@ public class Comment {
     @Column(name = "created")
     private LocalDateTime created;
 
-    //    @ManyToOne
-//    @JoinColumn(name = "event_id", nullable = false)
-//    private Event event;
     @Column(name = "event_id", nullable = false)
     private Long eventId;
-
 
     @Column(name = "user_id", nullable = false)
     private Long userId;

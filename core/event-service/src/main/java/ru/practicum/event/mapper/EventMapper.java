@@ -24,7 +24,6 @@ public interface EventMapper {
     @Mapping(target = "participantLimit", source = "participantLimit", defaultValue = "0")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "userId", ignore = true)
-//    @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     Event toEntity(NewEventDto newEventDto);
@@ -37,7 +36,6 @@ public interface EventMapper {
     @Mapping(target = "category.id", source = "category")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "userId", ignore = true)
-//    @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "state", ignore = true)
@@ -48,7 +46,6 @@ public interface EventMapper {
     @Mapping(target = "category.id", source = "category")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "userId", ignore = true)
-//    @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "state", ignore = true)

@@ -94,7 +94,6 @@ public class EventServiceImpl implements EventService {
                         String.format("Событие с id %d для пользователя с id %d не найдено.",
                                 prm.getEventId(), prm.getUserId())));
         log.info("Получение события с id {}  для пользователя с id {}", prm.getEventId(), prm.getUserId());
-        //return addUserShortDtoToFullDto(ev, prm.getUserId());
 
         //добавление подтвержденных просмотров
         int confirmedRequests = requestServiceClient.getConfirmedRequest(List.of(ev.getId()))
