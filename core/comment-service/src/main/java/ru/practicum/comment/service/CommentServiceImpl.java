@@ -1,5 +1,6 @@
 package ru.practicum.comment.service;
 
+import feign.FeignException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -8,8 +9,8 @@ import ru.practicum.comment.dto.CommentDto;
 import ru.practicum.comment.mapper.CommentMapper;
 import ru.practicum.comment.model.Comment;
 import ru.practicum.comment.repository.CommentRepository;
-import ru.practicum.event.model.Event;
-import ru.practicum.event.service.EventService;
+import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.feign.EventServiceClient;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.feign.UserServiceClient;
@@ -24,14 +25,22 @@ import java.util.List;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-    private final EventService eventService;
+    private final EventServiceClient eventServiceClient;
     private final UserServiceClient userServiceClient;
 
     @Override
     public List<CommentDto> getComments(Long eventId) {
         log.info("Get comments by eventId: {}", eventId);
-        eventService.getPublicEventById(eventId);
-        List<CommentDto> dtos = CommentMapper.INSTANCE.toDtos(commentRepository.findAllByEventId(eventId));
+        EventFullDto eventFullDto;
+        try {
+            eventFullDto = eventServiceClient.getEventById(eventId);
+        } catch (FeignException.NotFound ex) {
+            throw new NotFoundException(
+                    String.format("Не найдено события с id: %d", eventId)
+            );
+        }
+
+        List<CommentDto> dtos = CommentMapper.INSTANCE.toDtos(commentRepository.findAllByEventId(eventFullDto.getId()));
         return dtos.stream()
                 // Избегаем дублирования комментариев в ответе
                 .filter((dto) -> dto.getParentCommentId() == null)
@@ -41,33 +50,44 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto createComment(Long userId, CommentDto commentDto) {
         UserShortDto user = getUserById(userId);
-        Event event = eventService.getPublicEventById(commentDto.getEventId());
+        EventFullDto eventFullDto = eventServiceClient.getEventById(commentDto.getEventId());
+//        Event event = eventService.getPublicEventById(commentDto.getEventId());
         Comment comment = CommentMapper.INSTANCE.toEntity(commentDto);
         comment.setUserId(user.getId());
-        comment.setEvent(event);
+
+        comment.setEventId(eventFullDto.getId());
+
         log.info("Create comment: {}", comment);
-        return CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
+        CommentDto savedCommentDto=  CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
+        savedCommentDto.setUser(user);
+        return savedCommentDto;
     }
 
     @Override
     public CommentDto updateComment(CommentDto commentDto) {
-        Event event = eventService.getPublicEventById(commentDto.getEventId());
+//        Event event = eventService.getPublicEventById(commentDto.getEventId());
+        EventFullDto eventFullDto = eventServiceClient.getEventById(commentDto.getEventId());
         Comment comment = getCommentById(commentDto.getId());
         CommentMapper.INSTANCE.updateDto(commentDto, comment);
         log.info("Admin update comment: {}", comment);
-        comment.setEvent(event);
+        //
+        comment.setEventId(eventFullDto.getId());
+
         return CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
     }
 
     @Override
     public CommentDto updateComment(Long userId, CommentDto commentDto) {
         UserShortDto user = getUserById(userId);
-        Event event = eventService.getPublicEventById(commentDto.getEventId());
+//        Event event = eventService.getPublicEventById(commentDto.getEventId());
+        EventFullDto eventFullDto = eventServiceClient.getEventById(commentDto.getEventId());
         Comment comment = getCommentById(commentDto.getId());
         CommentMapper.INSTANCE.updateDto(commentDto, comment);
         log.info("Update comment: {}", comment);
         comment.setUserId(userId);
-        comment.setEvent(event);
+        //
+        comment.setEventId(eventFullDto.getId());
+
         return CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
     }
 
@@ -112,7 +132,9 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = CommentMapper.INSTANCE.toEntity(commentDto);
         comment.setUserId(userId);
-        comment.setEvent(parentComment.getEvent());
+        //
+        comment.setEventId(parentComment.getEventId());
+
         comment.setParentComment(parentComment);
 
         log.info("Create reply to comment: {}", comment);

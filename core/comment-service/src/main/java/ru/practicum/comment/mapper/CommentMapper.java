@@ -12,13 +12,14 @@ public interface CommentMapper {
 
     CommentMapper INSTANCE = Mappers.getMapper(CommentMapper.class);
 
-    @Mapping(target = "eventId", source = "event.id")
+    @Mapping(target = "eventId", source = "eventId")
     @Mapping(target = "parentCommentId", source = "parentComment.id")
-    CommentDto toDto(Comment comment);
+    CommentDto  toDto(Comment comment);
+
 
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "eventId", ignore = true)
-    @Mapping(target = "parentId", ignore = true)
+    @Mapping(target = "parentComment", ignore = true)
     List<CommentDto> toDtos(List<Comment> comments);
 
     @Mapping(target = "id", ignore = true)

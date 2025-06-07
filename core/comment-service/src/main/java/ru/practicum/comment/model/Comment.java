@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ru.practicum.event.model.Event;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,9 +27,12 @@ public class Comment {
     @Column(name = "created")
     private LocalDateTime created;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
+    //    @ManyToOne
+//    @JoinColumn(name = "event_id", nullable = false)
+//    private Event event;
+    @Column(name = "event_id", nullable = false)
+    private Long eventId;
+
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
