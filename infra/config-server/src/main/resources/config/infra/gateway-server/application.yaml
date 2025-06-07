@@ -45,7 +45,7 @@ spring:
             uri: lb://main-service
             predicates:
                - Path=/**
-#
+
 
 server:
   port: 8080
