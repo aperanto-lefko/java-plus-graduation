@@ -51,21 +51,19 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto createComment(Long userId, CommentDto commentDto) {
         UserShortDto user = getUserById(userId);
         EventFullDto eventFullDto = eventServiceClient.getEventById(commentDto.getEventId());
-//        Event event = eventService.getPublicEventById(commentDto.getEventId());
         Comment comment = CommentMapper.INSTANCE.toEntity(commentDto);
         comment.setUserId(user.getId());
 
         comment.setEventId(eventFullDto.getId());
 
         log.info("Create comment: {}", comment);
-        CommentDto savedCommentDto=  CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
+        CommentDto savedCommentDto = CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
         savedCommentDto.setUser(user);
         return savedCommentDto;
     }
 
     @Override
     public CommentDto updateComment(CommentDto commentDto) {
-//        Event event = eventService.getPublicEventById(commentDto.getEventId());
         EventFullDto eventFullDto = eventServiceClient.getEventById(commentDto.getEventId());
         Comment comment = getCommentById(commentDto.getId());
         CommentMapper.INSTANCE.updateDto(commentDto, comment);
@@ -79,7 +77,6 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentDto updateComment(Long userId, CommentDto commentDto) {
         UserShortDto user = getUserById(userId);
-//        Event event = eventService.getPublicEventById(commentDto.getEventId());
         EventFullDto eventFullDto = eventServiceClient.getEventById(commentDto.getEventId());
         Comment comment = getCommentById(commentDto.getId());
         CommentMapper.INSTANCE.updateDto(commentDto, comment);
@@ -132,13 +129,13 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = CommentMapper.INSTANCE.toEntity(commentDto);
         comment.setUserId(userId);
-        //
         comment.setEventId(parentComment.getEventId());
-
         comment.setParentComment(parentComment);
 
         log.info("Create reply to comment: {}", comment);
-        return CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
+        CommentDto dto = CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
+        dto.setUser(user);
+        return dto;
     }
 
     @Override
@@ -146,11 +143,15 @@ public class CommentServiceImpl implements CommentService {
         log.info("Get replies for commentId: {}", commentId);
         return CommentMapper.INSTANCE.toDtos(commentRepository.findAllByParentCommentId(commentId));
     }
+
     private UserShortDto getUserById(Long userId) {
-        UserShortDto user = userServiceClient.getUserById(userId).getBody();
-        if (user == null) {
-            throw new NotFoundException("Пользователь не найден с id: " + userId);
+        try {
+            return userServiceClient.getUserById(userId).getBody();
+        } catch (FeignException.NotFound ex) {
+            throw new NotFoundException(
+                    String.format("Пользователь с id %d не найден", userId)
+            );
         }
-        return user;
     }
-   }
+}
+
