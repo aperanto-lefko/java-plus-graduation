@@ -1,10 +1,11 @@
 spring:
   application:
-    name: gateway-server
+    name: request-service
   config:
     import: "configserver:"
   cloud:
     config:
+
       fail-fast: true
       retry:
         use-random-policy: true
@@ -25,5 +26,5 @@ eureka:
 logging:
   level:
     org.springframework.boot.context.config: DEBUG
-    org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator: DEBUG
-    reactor.netty.http.server: DEBUG
+    feign: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
