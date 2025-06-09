@@ -7,7 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.exception.*;
+import ru.practicum.exception.ConditionsNotMetException;
+import ru.practicum.exception.ConflictStateException;
+import ru.practicum.exception.ConflictTimeException;
+import ru.practicum.exception.DataAlreadyInUseException;
+import ru.practicum.exception.NotFoundException;
+import ru.practicum.exception.ServiceUnavailableException;
+import ru.practicum.exception.ValidationException;
+
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

@@ -68,7 +68,6 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = getCommentById(commentDto.getId());
         CommentMapper.INSTANCE.updateDto(commentDto, comment);
         log.info("Admin update comment: {}", comment);
-        //
         comment.setEventId(eventFullDto.getId());
 
         return CommentMapper.INSTANCE.toDto(commentRepository.save(comment));
