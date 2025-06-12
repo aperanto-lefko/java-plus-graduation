@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.service.CategoryService;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.event.dto.EventDtoGetParam;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
@@ -25,6 +26,7 @@ import ru.practicum.event.model.QEvent;
 import ru.practicum.event.dto.State;
 import ru.practicum.event.dto.StateAction;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.evm.stats.proto.ActionTypeProto;
 import ru.practicum.exception.ConflictStateException;
 import ru.practicum.exception.ConflictTimeException;
 import ru.practicum.exception.NotFoundException;
@@ -57,6 +59,7 @@ public class EventServiceImpl implements EventService {
     private final QEvent event = QEvent.event;
     private final UserServiceClient userServiceClient;
     private final RequestServiceClient requestServiceClient;
+    private final CollectorClient collectorClient;
 
     @Transactional
     @Override
@@ -246,9 +249,9 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList());
         }
 
-        if (!events.isEmpty()) {
-            viewService.saveViews(events, rqt);
-        }
+//        if (!events.isEmpty()) {
+//            viewService.saveViews(events, rqt);
+//        }
 
         List<EventShortDto> dtos = toEventShortDtoAddUserList(events);
         dtos.forEach(dto ->
@@ -259,7 +262,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto getPublicEventById(Long id, HttpServletRequest rqt) {
+    public EventFullDto getPublicEventById(Long id, Long userId, HttpServletRequest rqt) {
         Predicate predicate = event.state.eq(State.PUBLISHED).and(event.id.eq(id));
         Event ev = eventRepository.findOne(predicate)
                 .orElseThrow(() -> new NotFoundException(
@@ -269,6 +272,10 @@ public class EventServiceImpl implements EventService {
                 .getOrDefault(ev.getId(), 0);
         EventFullDto eventFullDto = addUserShortDtoToFullDto(ev, ev.getUserId());
         eventFullDto.setConfirmedRequests(confirmedRequests);
+
+        log.info("Отправка регистрации на мероприятие в collector");
+        collectorClient.sendUserAction(userId, id, ActionTypeProto.ACTION_VIEW);
+
         return eventFullDto;
     }
 

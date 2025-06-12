@@ -3,6 +3,7 @@ package ru.practicum.client;
 import com.google.protobuf.Timestamp;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.stereotype.Service;
 import ru.practicum.evm.stats.proto.ActionTypeProto;
@@ -13,6 +14,7 @@ import java.time.Instant;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class CollectorClient {
     final UserActionControllerGrpc.UserActionControllerBlockingStub blockingStub;
 
@@ -20,7 +22,8 @@ public class CollectorClient {
         this.blockingStub = blockingStub;
     }
 
-    public void sendUserAction(Long userId, Long eventId) {
+    public void sendUserAction(Long userId, Long eventId, ActionTypeProto actionType) {
+
         Instant instant = Instant.now();
         Timestamp grpcTimestamp = Timestamp.newBuilder()
                 .setSeconds(instant.getEpochSecond())
@@ -29,7 +32,7 @@ public class CollectorClient {
         UserActionProto proto = UserActionProto.newBuilder()
                 .setUserId(userId)
                 .setEventId(eventId)
-                .setActionType(ActionTypeProto.ACTION_REGISTER)
+                .setActionType(actionType)
                 .setTimestamp(grpcTimestamp)
                 .build();
 

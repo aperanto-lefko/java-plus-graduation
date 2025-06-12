@@ -19,6 +19,18 @@ spring:
     username: event
     password: event
 
+grpc:
+  client:
+    collector:
+      discovery:
+        enabled: true
+      serviceId: collector
+      address: discovery:///collector
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+      metadata:
+        port: grpc.port
 #  config:
 #    activate:
 #      on-profile: ci,test

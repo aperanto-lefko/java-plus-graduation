@@ -26,10 +26,7 @@ import ru.practicum.request.dto.RequestStatus;
 import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.feign.UserServiceClient;
-import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
 
-
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -86,7 +83,7 @@ public class RequestServiceImpl implements RequestService {
         }
 
         log.info("Отправка регистрации на мероприятие в collector");
-        collectorClient.sendUserAction(userId, eventId);
+        collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
         return requestMapper.toDto(request);
     }
 

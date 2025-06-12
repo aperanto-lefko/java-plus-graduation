@@ -26,7 +26,7 @@ public interface EventService {
 
     List<EventShortDto> getPublicEvents(EventDtoGetParam prm, HttpServletRequest rqt);
 
-    EventFullDto getPublicEventById(Long id, HttpServletRequest rqt);
+    EventFullDto getPublicEventById(Long id, Long userId, HttpServletRequest rqt);
 
     Event getPublicEventById(Long id);
 
