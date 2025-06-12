@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: collector
@@ -19,9 +20,10 @@ eureka:
   instance:
     preferIpAddress: true
     hostname: localhost
-    instance-id: "${spring.application.name}:${random.value}"
+    instance-id: "${spring.application.name}:${server.port}:${random.value}"
     leaseRenewalIntervalInSeconds: 10
-
+    metadata-map:
+      grpc.port: 9090
 logging:
   level:
     org.springframework.boot.context.config: DEBUG

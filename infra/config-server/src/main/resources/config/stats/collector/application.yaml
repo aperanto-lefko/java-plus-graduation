@@ -7,10 +7,11 @@ kafka:
     key_serialize_class: org.apache.kafka.common.serialization.StringSerializer
     value_serialize_class: kafka.serializer.AvroSerializer
 
-
+server:
+  port: 8081
 grpc:
   server:
-    port: 0  # динамический порт
+    port: 9090
 
 logging:
   level:

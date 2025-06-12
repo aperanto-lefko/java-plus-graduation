@@ -18,6 +18,19 @@ spring:
     username: request
     password: request
 
+grpc:
+  client:
+    collector:
+      discovery:
+        enabled: true
+      serviceId: collector
+      address: discovery:///collector
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+      metadata:
+        port: grpc.port
+
 logging:
   level:
     org:
