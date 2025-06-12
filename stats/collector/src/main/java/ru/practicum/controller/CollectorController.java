@@ -4,6 +4,7 @@ import com.google.protobuf.Empty;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -41,5 +42,9 @@ public class CollectorController extends UserActionControllerGrpc.UserActionCont
             Status status = Status.INTERNAL.withDescription(errorDetails);
             responseObserver.onError(new StatusRuntimeException(status));
         }
+    }
+    @PostConstruct
+    public void init() {
+        log.info("CollectorController инициализирован");
     }
 }
