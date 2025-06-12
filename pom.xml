@@ -35,7 +35,7 @@
 		<spring-cloud-dependencies.version>2023.0.3</spring-cloud-dependencies.version>
 		<avro-maven-plugin.version>${avro.version}</avro-maven-plugin.version>
 		<protobuf-plugin.version>2.4.0</protobuf-plugin.version>
-
+		<grpc-client-spring-boot-starter.version>3.1.0.RELEASE</grpc-client-spring-boot-starter.version>
 	</properties>
 
 	<dependencyManagement>
@@ -48,6 +48,20 @@
 		<type>pom</type>
 		<scope>import</scope>
 	</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-bom</artifactId>
+			<version>${grpc.version}</version>   <!-- 1.71.0 -->
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.devh</groupId>
+			<artifactId>grpc-client-spring-boot-starter</artifactId>
+			<version>${grpc-client-spring-boot-starter.version}</version>  <!-- у вас 3.1.0.RELEASE -->
+
+		</dependency>
+
 		<dependency>
 			<groupId>org.apache.avro</groupId>
 			<artifactId>avro</artifactId>
