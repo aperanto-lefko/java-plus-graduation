@@ -199,6 +199,11 @@ public class RequestServiceImpl implements RequestService {
                 ));
     }
 
+    @Override
+    public boolean isRegistered(Long eventId, Long userId) {
+        return requestRepository.existsByEventIdAndUserId(eventId, userId);
+    }
+
     private void handleRejectedRequests(List<Request> foundRequests, EventRequestStatusUpdateResult result, List<ParticipationRequestDto> rejected) {
         for (Request request : foundRequests) {
             request.setStatus(RequestStatus.REJECTED);

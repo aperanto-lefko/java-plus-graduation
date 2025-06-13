@@ -308,6 +308,16 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Не найдено события с id: " + id));
     }
 
+    @Override
+    public void likeEvent(Long eventId, Long userId) {
+        if (requestServiceClient.isRegistered(eventId, userId)) {
+            log.info("Отправка регистрации на мероприятие в collector");
+            collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_LIKE);
+        } else {
+            throw new NotFoundException(String.format("Пользователь userId {} не зарегистрирован на событие eventId {}", userId, eventId));
+        }
+    }
+
     private void dateValid(LocalDateTime start, LocalDateTime end) {
         if (start.isAfter(end)) {
             throw new ValidationException("Дата начала события позже даты окончания");

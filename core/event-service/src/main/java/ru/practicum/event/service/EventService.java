@@ -35,4 +35,6 @@ public interface EventService {
     EventFullDto getEventById(Long id, HttpServletRequest rqt);
 
     EventFullDto getByIdAndInitiator(Long eventId, Long userId);
+
+    void likeEvent (Long eventId, Long userId );
 }

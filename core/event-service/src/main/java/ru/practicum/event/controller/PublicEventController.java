@@ -30,8 +30,9 @@ public class PublicEventController {
         return eventService.getPublicEventById(id, userId, rqt);
     }
 
-
-
-
+    @PutMapping("/{eventId}/like")
+    public void likeEvent(@RequestHeader("X-EWM-USER-ID") Long userId, @PathVariable Long eventId) {
+        eventService.likeEvent(eventId, userId);
+    }
 
 }

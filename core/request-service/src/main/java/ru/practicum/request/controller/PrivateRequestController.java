@@ -65,4 +65,9 @@ public class PrivateRequestController {
         return requestService.getConfirmedRequestsCounts(eventIds);
     }
 
-}
+    @GetMapping(path = "/registered/{eventId}/{userId}")
+    public boolean isRegistered(@PathVariable("eventId") Long eventId,
+                                @PathVariable("userId") Long userId) {
+        return requestService.isRegistered(eventId, userId);
+    }
+    }
