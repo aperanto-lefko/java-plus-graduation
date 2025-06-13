@@ -18,6 +18,8 @@
         <module>stats-server</module>
         <module>collector</module>
         <module>serialization</module>
+        <module>aggregator</module>
+        <module>kafka_commons</module>
     </modules>
 
 </project>

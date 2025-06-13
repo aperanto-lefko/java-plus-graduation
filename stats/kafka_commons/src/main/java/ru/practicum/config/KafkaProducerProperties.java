@@ -1,4 +1,4 @@
-package ru.practicum.kafka_commons;
+package ru.practicum.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;

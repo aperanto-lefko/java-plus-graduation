@@ -15,8 +15,9 @@ import ru.practicum.evm.stats.proto.UserActionProto;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
 import ru.practicum.exception.SendMessageException;
-import ru.practicum.kafka_commons.KafkaCollectorProducer;
+
 import ru.practicum.mapper.UserActionMapper;
+import ru.practicum.producer.KafkaProducer;
 
 @GrpcService
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ import ru.practicum.mapper.UserActionMapper;
 public class CollectorController extends UserActionControllerGrpc.UserActionControllerImplBase {
     @Value("${kafka.topics.user-actions}")
     private String topic;
-    final KafkaCollectorProducer kafkaCollectorProducer;
+    final KafkaProducer kafkaProducer;
     final UserActionMapper mapper;
 
     @Override
@@ -33,7 +34,7 @@ public class CollectorController extends UserActionControllerGrpc.UserActionCont
         try {
             log.info("Обработка контроллером collectUserAction сообщения UserActionProto {}", request);
             UserActionAvro avro = mapper.mapToAvro(request);
-            kafkaCollectorProducer.send(avro, topic);
+            kafkaProducer.send(avro, topic);
             responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
             log.debug("Успешная обработка события {}", request);
