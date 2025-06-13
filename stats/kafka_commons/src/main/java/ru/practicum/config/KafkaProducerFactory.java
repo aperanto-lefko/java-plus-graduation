@@ -9,6 +9,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,6 +25,7 @@ import java.util.Properties;
 public class KafkaProducerFactory {
     KafkaProducer<String, SpecificRecordBase> pr;
     final KafkaProducerProperties config;
+
 
     @Bean
     public KafkaProducer<String, SpecificRecordBase> producer() {
@@ -40,7 +43,7 @@ public class KafkaProducerFactory {
     public void closeProducer() {
         if (pr != null) {
             pr.close();
-            log.info("kafka-producer закрыт");
+            log.info("Kafka producer закрыт ");
         }
     }
 }

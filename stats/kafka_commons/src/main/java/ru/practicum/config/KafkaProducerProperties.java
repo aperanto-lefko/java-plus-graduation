@@ -15,8 +15,6 @@ import java.util.Properties;
 @Configuration
 @ConfigurationProperties(prefix = "kafka.producer")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Getter
-@Setter
 @Slf4j
 public class KafkaProducerProperties {
     String bootstrapServer;
@@ -24,6 +22,8 @@ public class KafkaProducerProperties {
     String valueSerializeClass;
 
     public Properties buildProperties() {
+        log.info("KafkaProducerProperties: bootstrapServer={}, keySerializeClass={}, valueSerializeClass={}",
+                bootstrapServer, keySerializeClass, valueSerializeClass);
         Properties properties = new Properties();
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializeClass);

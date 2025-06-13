@@ -6,6 +6,8 @@ kafka:
     bootstrap_server: localhost:9092
     key_serialize_class: org.apache.kafka.common.serialization.StringSerializer
     value_serialize_class: kafka.serializer.AvroSerializer
+  consumer:
+    enabled: false
 server:
   port: 8081
 grpc:

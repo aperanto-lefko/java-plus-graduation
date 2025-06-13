@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
 import org.springframework.stereotype.Service;
@@ -15,8 +16,8 @@ import ru.practicum.exception.SendMessageException;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class KafkaProducer {
-    final org.apache.kafka.clients.producer.KafkaProducer<String, SpecificRecordBase> kafkaProducer;
+public class KafkaProducerService {
+    final KafkaProducer<String, SpecificRecordBase> kafkaProducer;
 
     public void send(SpecificRecordBase data, String topic) {
         try {

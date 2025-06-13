@@ -17,7 +17,7 @@ import ru.practicum.ewm.stats.proto.UserActionControllerGrpc;
 import ru.practicum.exception.SendMessageException;
 
 import ru.practicum.mapper.UserActionMapper;
-import ru.practicum.producer.KafkaProducer;
+import ru.practicum.producer.KafkaProducerService;
 
 @GrpcService
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ import ru.practicum.producer.KafkaProducer;
 public class CollectorController extends UserActionControllerGrpc.UserActionControllerImplBase {
     @Value("${kafka.topics.user-actions}")
     private String topic;
-    final KafkaProducer kafkaProducer;
+    final KafkaProducerService kafkaProducer;
     final UserActionMapper mapper;
 
     @Override
@@ -48,4 +48,6 @@ public class CollectorController extends UserActionControllerGrpc.UserActionCont
     public void init() {
         log.info("CollectorController инициализирован");
     }
+
+
 }
