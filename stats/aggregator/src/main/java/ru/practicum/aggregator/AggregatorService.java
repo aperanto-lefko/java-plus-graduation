@@ -26,7 +26,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -62,6 +61,7 @@ public class AggregatorService {
     private final Map<Long, Map<Long, Double>> minWeightsSums = new ConcurrentHashMap<>();
     // Карта: ID пользователя → список ID мероприятий, с которыми он взаимодействовал
     private final Map<Long, List<Long>> userEvents = new ConcurrentHashMap<>();
+
 
     @PostConstruct
     public void start() {
@@ -305,7 +305,6 @@ public class AggregatorService {
                     .build());
         }
 
-        // Сортируем для удобства
         similarities.sort(Comparator
                 .comparing(EventSimilarityAvro::getEventA)
                 .thenComparing(EventSimilarityAvro::getEventB));
@@ -322,7 +321,7 @@ public class AggregatorService {
      *
      * Упорядоченное хранение пар мероприятий (чтобы избежать дублирования)
      *
-     * Атомарное обновление значений в concurrent-структуре
+     * обновление значений в concurrent
      *
      * Эффективное изменение суммы минимумов на заданную дельту
      */
