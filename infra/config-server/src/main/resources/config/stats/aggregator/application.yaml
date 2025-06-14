@@ -8,8 +8,8 @@ kafka:
     key_serialize_class: org.apache.kafka.common.serialization.StringSerializer
     value_serialize_class: kafka.serializer.AvroSerializer
     linger-ms: 0  # Отключаем задержку перед отправкой
-    batch-size: 1  # Отправлять каждое сообщение отдельно
-    max-in-flight-requests: 1  # По одному сообщению за раз
+    batch-size: 1
+    max-in-flight-requests: 1  # По 1 сообщению за раз
   consumer:
     enabled: true
     bootstrap_server: localhost:9092
@@ -18,7 +18,7 @@ kafka:
     key_deserializer_class: org.apache.kafka.common.serialization.StringDeserializer
     value_deserializer_class: kafka.deserializer.UserActionDeserializer
     auto_offset_reset: earliest
-    poll_timeout: 1000
+    poll_timeout: 100
 server:
   port: 0
 
