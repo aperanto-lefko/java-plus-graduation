@@ -196,6 +196,7 @@ public class AggregatorService {
 
         // Получаем нужные суммы
         Double sumMin = minWeightsSums.getOrDefault(first, Map.of()).get(second); // сумма минимумов общих пользователей
+
         Double sumA = eventTotalWeights.get(eventA); // общая сумма весов по первому мероприятию
         Double sumB = eventTotalWeights.get(eventB); // по второму
 
