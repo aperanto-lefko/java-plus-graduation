@@ -12,6 +12,8 @@ import org.apache.kafka.common.KafkaException;
 import org.springframework.stereotype.Service;
 import ru.practicum.exception.SendMessageException;
 
+import java.util.concurrent.TimeUnit;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,12 +28,20 @@ public class KafkaProducerService {
                         if (e != null) {
                             log.error("[{}] Ошибка отправки: {}", topic, e.getMessage());
                         } else {
-                            log.info("Отправлено в {} - {}", topic, metadata.partition());
+                            log.info("Kafka: отправлено cобытие {}  в топик {} - {}",data, topic, metadata.partition());
                         }
                     });
+            kafkaProducer.flush();
         } catch (SerializationException | KafkaException ex) {
             log.error("Ошибка при отправлении сообщения:", ex);
             throw new SendMessageException("Ошибка при отправлении сообщения", ex);
+        }
+    }
+    public void flush() {
+        try {
+            kafkaProducer.flush();
+        } catch (Exception e) {
+            log.error("Ошибка при завершении отправки сообщений", e);
         }
     }
 }

@@ -61,7 +61,14 @@ public class AggregatorService {
     public void stop() {
         running = false;
         consumer.wakeup();
+        try {
+            log.info("Завершение работы: отправка оставшихся сообщений...");
+            kafkaProducer.flush(); // Ждём 10 секунд
+        } catch (Exception e) {
+            log.error("Ошибка при завершении продюсера", e);
+        }
         executor.shutdown();
+
         log.info("Kafka consumer остановлен");
     }
     private void processMessages() {
@@ -94,21 +101,37 @@ public class AggregatorService {
         }
     }
 
+
     // Обработка  действия пользователя
     private void processUserAction(UserActionAvro action) {
-        log.info("Получение данных для обработки UserActionAvro {}", action);
         long userId = action.getUserId();
         long eventId = action.getEventId();
-    // Получаем вес действия
         double newWeight = getActionWeight(action.getActionType());
-        // Обновляем вес пользователя для этого мероприятия, получаем старый вес
-        double oldWeight = updateUserWeights(eventId, userId, newWeight);
 
-        // Если вес увеличился,пересчитать сходства
-        if (newWeight > oldWeight) {
+        Double oldWeight = eventUserWeights
+                .getOrDefault(eventId, Map.of())
+                .get(userId);
+
+        // Обновим вес
+        updateUserWeights(eventId, userId, newWeight);
+
+        // Новый случай — первое взаимодействие с мероприятием
+        if (oldWeight == null) {
+            // Сравнить с остальными мероприятиями
+            eventUserWeights.forEach((otherEventId, otherUsers) -> {
+                if (otherEventId == eventId) return;
+
+                Double otherWeight = otherUsers.get(userId);
+                if (otherWeight == null) return;
+
+                double minWeight = Math.min(newWeight, otherWeight);
+                updateMinWeightsSum(eventId, otherEventId, minWeight);
+                sendSimilarity(eventId, otherEventId);
+            });
+        } else if (newWeight > oldWeight) {
+            // Только если вес стал больше — пересчёт
             recalculateSimilarities(eventId, userId, oldWeight, newWeight);
         }
-
     }
     // Обновляет вес действия пользователя по мероприятию
     private double updateUserWeights(long eventId, long userId, double newWeight) {
@@ -118,9 +141,9 @@ public class AggregatorService {
             }
             Double currentWeight = userWeights.get(userId); // старый вес
             // если веса не было или он меньше нового
-            if (currentWeight == null || newWeight > currentWeight) {
+            if (currentWeight == null || newWeight > currentWeight) { //добавлено
                 // на сколько изменилась сумма весов мероприятия
-                double delta = currentWeight == null ? newWeight : newWeight - currentWeight;
+                double delta = (currentWeight == null) ? newWeight : newWeight - currentWeight;
 
                 // обновляем общую сумму весов по мероприятию
                 eventTotalWeights.merge(eventId, delta, Double::sum);
@@ -178,6 +201,7 @@ public class AggregatorService {
 
         // Проверка, что данные существуют и не нули
         if (sumMin == null || sumA == null || sumB == null || sumA == 0 || sumB == 0) {
+            log.info ("Данные для обновления равны 0 eventA {} и eventB {}",eventA, eventB);
             return; // нельзя посчитать сходство
         }
 
