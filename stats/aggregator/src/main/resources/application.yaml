@@ -25,4 +25,4 @@ eureka:
       grpc.port: 9090
 logging:
   level:
-    org.springframework.boot.context.config: DEBUG
+    org.springframework.boot.context.config: INFO

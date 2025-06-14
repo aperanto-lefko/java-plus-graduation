@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AggregatorService {
-    final KafkaConsumer<Void, SpecificRecordBase> consumer;
+    final KafkaConsumer<String, SpecificRecordBase> consumer;
     final KafkaProducerService kafkaProducer;
     @Value("${kafka.topics.user-actions}")
     private String inputTopic;
@@ -52,6 +52,7 @@ public class AggregatorService {
 
     @PostConstruct
     public void start() {
+        log.info("Подписка consumer на топик {}", inputTopic);
         consumer.subscribe(Collections.singletonList(inputTopic));
         executor.submit(this::processMessages);
     }
@@ -66,11 +67,13 @@ public class AggregatorService {
     private void processMessages() {
         while (running) {
             try {
-                ConsumerRecords<Void, SpecificRecordBase> records = consumer.poll(Duration.ofMillis(pollTimeout));
-                for (ConsumerRecord<Void, SpecificRecordBase> record : records) {
+                ConsumerRecords<String, SpecificRecordBase> records = consumer.poll(Duration.ofMillis(pollTimeout));
+                log.info("Получено {} записей для обработки", records.count());
+                for (ConsumerRecord<String, SpecificRecordBase> record : records) {
+                    log.info("Получена запись {}", record);
                     SpecificRecordBase value = record.value();
                     if (value instanceof UserActionAvro userAction) {
-                        log.debug("Обработка действия: {}", userAction);
+                        log.info("Обработка действия: {}", userAction);
                         try {
                             processUserAction(userAction);
                         } catch (Exception e) {
@@ -93,6 +96,7 @@ public class AggregatorService {
 
     // Обработка  действия пользователя
     private void processUserAction(UserActionAvro action) {
+        log.info("Получение данных для обработки UserActionAvro {}", action);
         long userId = action.getUserId();
         long eventId = action.getEventId();
     // Получаем вес действия
@@ -189,6 +193,7 @@ public class AggregatorService {
                 .build();
 
         // Отправка в Kafka
+        log.info("Отправка similarityEvent {} в топик {}", similarityEvent, outputTopic);
         kafkaProducer.send(similarityEvent, outputTopic);
         log.debug("Отправлено сходство: {} <-> {} = {}", first, second, similarity);
     }

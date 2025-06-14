@@ -23,11 +23,11 @@ import java.util.Properties;
 @ConditionalOnProperty(name = "kafka.consumer.enabled", havingValue = "true", matchIfMissing = false)
 //как ключ, в одних приложениях создается в других нет
 public class KafkaConsumerFactory {
-    KafkaConsumer<Void, SpecificRecordBase> consumer;
+    KafkaConsumer<String, SpecificRecordBase> consumer;
     final KafkaConsumerProperties config;
 
     @Bean
-    public KafkaConsumer<Void, SpecificRecordBase> consumer() {
+    public KafkaConsumer<String, SpecificRecordBase> consumer() {
         Properties properties = config.buildProperties();
         if (properties == null) {
             log.info("Настройки для consumer не загружены");
@@ -42,7 +42,7 @@ public class KafkaConsumerFactory {
     public void closeConsumer() {
         if (consumer != null) {
             consumer.close();
-            log.info("Kafka consumer закрыт через ApplicationContext");
+            log.info("Kafka consumer закрыт");
         }
     }
 }
