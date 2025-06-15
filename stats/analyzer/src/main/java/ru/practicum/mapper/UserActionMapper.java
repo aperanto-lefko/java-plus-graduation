@@ -8,7 +8,6 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.model.ActionType;
 import ru.practicum.model.UserAction;
 
-import java.time.Instant;
 
 @Mapper(componentModel = "spring")
 public interface UserActionMapper {
@@ -16,7 +15,7 @@ public interface UserActionMapper {
     @Mapping(target = "userId", source = "userId")
     @Mapping(target = "eventId", source = "eventId")
     @Mapping(target = "actionType", source = "actionType", qualifiedByName = "actionTypeAvroToActionType")
-    @Mapping(target = "timestamp", source = "timestamp", qualifiedByName = "timestampMsToInstant")
+    @Mapping(target = "timestamp", source = "timestamp")
     UserAction toEntity(UserActionAvro avro);
 
     @Named("actionTypeAvroToActionType")
@@ -26,8 +25,5 @@ public interface UserActionMapper {
         }
         return ActionType.valueOf(actionTypeAvro.name());
     }
-    @Named("timestampMsToInstant")
-    default Instant timestampMsToInstant(long timestampMs) {
-        return Instant.ofEpochMilli(timestampMs);
-    }
+
 }

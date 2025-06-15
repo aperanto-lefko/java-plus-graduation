@@ -18,7 +18,7 @@ import java.time.Instant;
 @Entity
 @Getter
 @Setter
-@Table(name = "actions")
+@Table(name = "user_actions")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserAction {
     @Id

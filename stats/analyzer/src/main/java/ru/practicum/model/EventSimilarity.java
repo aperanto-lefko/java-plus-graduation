@@ -16,7 +16,7 @@ import java.time.Instant;
 @Entity
 @Getter
 @Setter
-@Table(name = "similarities")
+@Table(name = "event_similarities")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventSimilarity {
     @Id

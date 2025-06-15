@@ -16,7 +16,7 @@ message SimilarEventsRequestProto {
 }
 
 message InteractionsCountRequestProto {
-  repeated int32 event_id = 1;
+  repeated int64 event_id = 1;
 }
 
 message RecommendedEventProto {
