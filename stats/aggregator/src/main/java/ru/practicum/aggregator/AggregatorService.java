@@ -110,6 +110,7 @@ public class AggregatorService {
                 if (!records.isEmpty()) {
                     consumer.commitSync();
                 }
+                kafkaProducer.flush();
             } catch (WakeupException e) {
                 if (!running) break;
             } catch (Exception e) {

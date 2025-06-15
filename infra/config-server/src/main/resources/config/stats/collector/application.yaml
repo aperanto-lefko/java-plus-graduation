@@ -6,9 +6,7 @@ kafka:
     bootstrap_server: localhost:9092
     key_serialize_class: org.apache.kafka.common.serialization.StringSerializer
     value_serialize_class: kafka.serializer.AvroSerializer
-    linger-ms: 0  #  нет задержки перед отправкой
-    batch-size: 1
-    max-in-flight-requests: 1  # По 1 сообщению за раз
+
   consumer:
     enabled: false
 server:

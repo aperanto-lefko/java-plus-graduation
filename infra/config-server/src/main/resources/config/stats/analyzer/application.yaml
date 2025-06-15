@@ -1,8 +1,26 @@
+spring:
+  application:
+    name: analyzer
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: always
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5435/analyzer-db
+    username: analyzer
+    password: analyzer
+
+
 kafka:
   topics:
     user-actions: stats.user-actions.v1
     events-similarity: stats.events-similarity.v1
-
   producer:
     bootstrap_server: localhost:9092
     key_serialize_class: org.apache.kafka.common.serialization.StringSerializer
@@ -17,11 +35,15 @@ kafka:
     value_deserializer_class: kafka.deserializer.UserActionDeserializer
     auto_offset_reset: earliest
     poll_timeout: 100
+
 server:
-  port: 0
+  port: 8082
+grpc:
+  server:
+    port: 9090
 
 logging:
   level:
-    org.springframework.kafka: INFO
-    org.apache.kafka: INFO
+    org.springframework.kafka: DEBUG
+    org.apache.kafka: DEBUG
     io.grpc: DEBUG

@@ -23,9 +23,6 @@ public class KafkaProducerProperties {
     String keySerializeClass;
     String valueSerializeClass;
 
-    Integer lingerMs;
-    Integer batchSize;
-    Integer maxInFlightRequests;
 
     public Properties buildProperties() {
 
@@ -34,15 +31,13 @@ public class KafkaProducerProperties {
         properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializeClass);
         properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializeClass);
 
-        properties.put(ProducerConfig.LINGER_MS_CONFIG, lingerMs);
-        properties.put(ProducerConfig.BATCH_SIZE_CONFIG, batchSize);
-        properties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, maxInFlightRequests);
+
         return properties;
     }
 
     @PostConstruct
     public void init() {
-        log.info("Loaded Kafka producer config: bootstrap={}, keySerializer={}, valueSerializer={}, lingerMs={}, batchSize={}, maxInFlight={}",
-                bootstrapServer, keySerializeClass, valueSerializeClass, lingerMs, batchSize, maxInFlightRequests);
+        log.info("Loaded Kafka producer config: bootstrap={}, keySerializer={}, valueSerializer={}",
+                bootstrapServer, keySerializeClass, valueSerializeClass);
     }
 }

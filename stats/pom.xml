@@ -20,6 +20,7 @@
         <module>serialization</module>
         <module>aggregator</module>
         <module>kafka_commons</module>
+        <module>analyzer</module>
     </modules>
 
 </project>
