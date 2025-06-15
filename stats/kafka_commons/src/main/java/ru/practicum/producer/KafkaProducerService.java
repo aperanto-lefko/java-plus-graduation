@@ -23,7 +23,7 @@ public class KafkaProducerService {
 
     public void send(SpecificRecordBase data, String topic) {
         try {
-            //Thread.sleep(10);
+
             kafkaProducer.send(new ProducerRecord<>(topic, data),
                     (metadata, e) -> {
                         if (e != null) {
@@ -32,12 +32,11 @@ public class KafkaProducerService {
                             log.info("Kafka: отправлено cобытие {}  в топик {} - {}",data, topic, metadata.partition());
                         }
                     });
-            //kafkaProducer.flush();
+
         } catch (SerializationException | KafkaException ex) {
             log.error("Ошибка при отправлении сообщения:", ex);
             throw new SendMessageException("Ошибка при отправлении сообщения", ex);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
+
         }
     }
     public void flush() {
