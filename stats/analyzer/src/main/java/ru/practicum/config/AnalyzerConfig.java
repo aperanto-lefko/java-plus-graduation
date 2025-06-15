@@ -19,22 +19,24 @@ public class AnalyzerConfig {
     private String bootstrapServer;
     
     @Bean
-    public KafkaConsumer<String, EventSimilarityAvro> eventConsumer() {
+    public KafkaConsumer<String, EventSimilarityAvro> eventSimilarityConsumer() {
         Properties properties = new Properties();
         properties.put(ConsumerConfig.CLIENT_ID_CONFIG, "analyzer_eventSimilarity_group");
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "analyzer_consumer");
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventSimilarityDeserializer.class);
         return new KafkaConsumer<>(properties);
     }
 
     @Bean
-    public KafkaConsumer<String, UserActionAvro> userConsumer() {
+    public KafkaConsumer<String, UserActionAvro> userActionConsumer() {
         Properties properties = new Properties();
         properties.put(ConsumerConfig.CLIENT_ID_CONFIG, "analyzer_userAction_group");
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "analyzer_consumer");
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, UserActionDeserializer.class);
         return new KafkaConsumer<>(properties);

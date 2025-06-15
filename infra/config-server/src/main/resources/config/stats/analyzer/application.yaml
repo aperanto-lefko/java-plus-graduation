@@ -24,7 +24,7 @@ kafka:
 
   consumer:
     bootstrap_server: localhost:9092
-
+    poll_timeout: 100
 server:
   port: 8082
 grpc:

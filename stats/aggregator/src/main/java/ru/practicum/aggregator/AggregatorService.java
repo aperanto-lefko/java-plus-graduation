@@ -34,33 +34,33 @@ import java.util.concurrent.Executors;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AggregatorService {
-    private static final double VIEW_WEIGHT = 0.4;
-    private static final double LIKE_WEIGHT = 1.0;
-    private static final double REGISTER_WEIGHT = 0.8;
+    static final double VIEW_WEIGHT = 0.4;
+    static final double LIKE_WEIGHT = 1.0;
+    static final double REGISTER_WEIGHT = 0.8;
 
     final KafkaConsumer<String, SpecificRecordBase> consumer;
     final KafkaProducerService kafkaProducer;
 
     @Value("${kafka.topics.user-actions}")
-    private String inputTopic;
+    String inputTopic;
 
     @Value("${kafka.topics.events-similarity}")
-    private String outputTopic;
+    String outputTopic;
 
     @Value("${kafka.consumer.poll_timeout}")
-    private long pollTimeout;
+    long pollTimeout;
 
     final ExecutorService executor = Executors.newSingleThreadExecutor();
     volatile boolean running = true;
 
     // Карта: ID мероприятия → (ID пользователя → максимальный вес действия)
-    private final Map<Long, Map<Long, Double>> eventUserWeights = new ConcurrentHashMap<>();
+    final Map<Long, Map<Long, Double>> eventUserWeights = new ConcurrentHashMap<>();
     // Карта: ID мероприятия → сумма всех весов пользователей
-    private final Map<Long, Double> eventTotalWeights = new ConcurrentHashMap<>();
+    final Map<Long, Double> eventTotalWeights = new ConcurrentHashMap<>();
     // Карта: ID мероприятия A → (ID мероприятия B → сумма минимальных весов общих пользователей)
-    private final Map<Long, Map<Long, Double>> minWeightsSums = new ConcurrentHashMap<>();
+    final Map<Long, Map<Long, Double>> minWeightsSums = new ConcurrentHashMap<>();
     // Карта: ID пользователя → список ID мероприятий, с которыми он взаимодействовал
-    private final Map<Long, List<Long>> userEvents = new ConcurrentHashMap<>();
+    final Map<Long, List<Long>> userEvents = new ConcurrentHashMap<>();
 
 
     @PostConstruct
