@@ -16,13 +16,10 @@ import java.time.Instant;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class CollectorClient {
-    final UserActionControllerGrpc.UserActionControllerBlockingStub blockingStub;
+   @GrpcClient("collector")
+    UserActionControllerGrpc.UserActionControllerBlockingStub blockingStub;
 
-    public CollectorClient(@GrpcClient("collector") UserActionControllerGrpc.UserActionControllerBlockingStub blockingStub) {
-        this.blockingStub = blockingStub;
-    }
-
-    public void sendUserAction(Long userId, Long eventId, ActionTypeProto actionType) {
+   public void sendUserAction(Long userId, Long eventId, ActionTypeProto actionType) {
 
         Instant instant = Instant.now();
         Timestamp grpcTimestamp = Timestamp.newBuilder()

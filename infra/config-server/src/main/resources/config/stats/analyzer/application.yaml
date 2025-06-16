@@ -26,10 +26,10 @@ kafka:
     bootstrap_server: localhost:9092
     poll_timeout: 100
 server:
-  port: 8082
+  port: 0
 grpc:
   server:
-    port: 9090
+    port: 0
 
 logging:
   level:

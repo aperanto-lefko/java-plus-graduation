@@ -37,4 +37,7 @@ public interface EventService {
     EventFullDto getByIdAndInitiator(Long eventId, Long userId);
 
     void likeEvent (Long eventId, Long userId );
+
+    List<EventShortDto> getRecommendations(Long userId, int limit);
+
 }

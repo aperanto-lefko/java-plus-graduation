@@ -35,4 +35,9 @@ public class PublicEventController {
         eventService.likeEvent(eventId, userId);
     }
 
+    @GetMapping("/recommendations")
+    public List<EventShortDto> findRecommendation(@RequestHeader(value = "X-EWM-USER-ID", required = false) Long userId,
+                                                  @RequestParam Integer limit) {
+        return eventService.getRecommendations(userId, limit);
+    }
 }
