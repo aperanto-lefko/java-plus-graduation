@@ -69,7 +69,8 @@ services:
       timeout: 5s
       interval: 5s
       retries: 10
-
+    networks:
+      - ewm-net
 
 
   user-db:
@@ -89,23 +90,6 @@ services:
       interval: 10s
       retries: 15
 
-
-  stats-db:
-    image: postgres:16.1
-    container_name: postgres-stats-db
-    ports:
-      - "6542:5432"
-    environment:
-      - POSTGRES_PASSWORD=stat
-      - POSTGRES_USER=stat
-      - POSTGRES_DB=stats
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 10s
-      interval: 10s
-      retries: 15
-    networks:
-      - ewm-net
 
   comment-db:
     image: postgres:16.1
@@ -150,6 +134,8 @@ services:
       - POSTGRES_PASSWORD=event
       - POSTGRES_USER=event
       - POSTGRES_DB=events
+    networks:
+      - ewm-net
 
 networks:
   ewm-net:
