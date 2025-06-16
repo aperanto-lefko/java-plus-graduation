@@ -28,6 +28,6 @@ public class EventSimilarity {
     Long eventIdB;
     @Column(name = "similarity_score")
     Double score;
-    @Column(name = "time")
+    @Column(name = "created")
     Instant timestamp;
 }
