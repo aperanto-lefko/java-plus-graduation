@@ -66,11 +66,7 @@ public class EventSimilarityCalculator {
         Map<Long, Double> newMap = new ConcurrentHashMap<>();
         newMap.put(userId, newWeight);
         eventUserWeights.put(eventId, newMap);
-
-        // Обновляем общую сумму весов
         eventTotalWeights.put(eventId, newWeight);
-
-        // Добавляем мероприятие в историю пользователя
         userEvents.compute(userId, (k, events) -> {
             if (events == null) {
                 events = new ArrayList<>();
@@ -78,23 +74,14 @@ public class EventSimilarityCalculator {
             events.add(eventId);
             return events;
         });
-
-        // Обновляем суммы минимумов для всех мероприятий пользователя
         updateMinWeightsForUser(userId, eventId, 0.0, newWeight);
-
-        // Генерируем события сходства для всех пар с новым мероприятием
         return generateSimilaritiesForUserEvents(userId, eventId);
     }
     // Первое взаимодействие пользователя с этим мероприятием
     private List<EventSimilarityAvro> handleNewUserForEvent(long userId, long eventId, double newWeight) {
-        // Добавляем пользователя к существующему мероприятию
-        eventUserWeights.get(eventId).put(userId, newWeight);
-
-        // Обновляем общую сумму весов
-        eventTotalWeights.merge(eventId, newWeight, Double::sum);
-
-        // Добавляем мероприятие в историю пользователя
-        userEvents.compute(userId, (k, events) -> {
+       eventUserWeights.get(eventId).put(userId, newWeight);
+       eventTotalWeights.merge(eventId, newWeight, Double::sum);
+       userEvents.compute(userId, (k, events) -> {
             if (events == null) {
                 events = new ArrayList<>();
             }
@@ -102,28 +89,18 @@ public class EventSimilarityCalculator {
             return events;
         });
 
-        // Обновляем суммы минимумов для всех мероприятий пользователя
         updateMinWeightsForUser(userId, eventId, 0.0, newWeight);
-
-        // Генерируем события сходства для всех пар с новым мероприятием
         return generateSimilaritiesForUserEvents(userId, eventId);
     }
 
     private List<EventSimilarityAvro> handleWeightUpdate(long userId, long eventId, double oldWeight, double newWeight) {
-        // Обновляем вес пользователя для мероприятия
         eventUserWeights.get(eventId).put(userId, newWeight);
 
-        // Обновляем общую сумму весов
         double delta = newWeight - oldWeight;
         eventTotalWeights.merge(eventId, delta, Double::sum);
-
-        // Обновляем суммы минимумов для всех мероприятий пользователя
         updateMinWeightsForUser(userId, eventId, oldWeight, newWeight);
-
-        // Генерируем события сходства для всех пар с обновленным мероприятием
         return generateSimilaritiesForUserEvents(userId, eventId);
     }
-//суммы минимумов
 
     /**
      *
@@ -150,19 +127,15 @@ public class EventSimilarityCalculator {
      * Значит, общая сумма минимумов для пары (A,B) должна увеличиться на 0.2
      */
     private void updateMinWeightsForUser(long userId, long eventId, double oldWeight, double newWeight) {
-        // Получаем список всех мероприятий, с которыми взаимодействовал пользователь
+        // список всех мероприятий, с которыми взаимодействовал пользователь
         List<Long> userEventIds = userEvents.get(userId);
         if (userEventIds == null) return;
 
         for (Long otherEventId : userEventIds) {
-            // Пропускаем текущее мероприятие (eventId) - смотрим только пары с другими
             if (otherEventId.equals(eventId)) continue;
-            // Получаем вес пользователя для другого мероприятия в паре
             double otherWeight = eventUserWeights.get(otherEventId).get(userId);
-            // Вычисляем предыдущий минимум для этой пары весов
-            double oldMin = Math.min(oldWeight, otherWeight);
-            // Вычисляем новый минимум для этой пары весов
-            double newMin = Math.min(newWeight, otherWeight);
+           double oldMin = Math.min(oldWeight, otherWeight);
+           double newMin = Math.min(newWeight, otherWeight);
             double delta = newMin - oldMin;
 
             if (delta != 0) {
@@ -211,25 +184,15 @@ public class EventSimilarityCalculator {
      * @param eventA
      * @param eventB
      * @param delta
-     * Этот метод обновляет сумму минимальных весов (S_min) для пары мероприятий в специальной структуре данных, гарантируя при этом:
-     *
-     * Упорядоченное хранение пар мероприятий (чтобы избежать дублирования)
-     *
-     * обновление значений в concurrent
-     *
-     * Эффективное изменение суммы минимумов на заданную дельту
-     */
+     * Этот метод обновляет сумму минимальных весов (S_min) для пары мероприятий
+        */
     private void updateMinWeightsSum(long eventA, long eventB, double delta) {
         long first = Math.min(eventA, eventB);
         long second = Math.max(eventA, eventB);
 
         minWeightsSums.compute(first, (k, innerMap) -> {
-            // Если для первого мероприятия еще нет внутренней карты - создаем
-            if (innerMap == null) innerMap = new ConcurrentHashMap<>();
-            // Обновляем значение для второго мероприятия:
-            // - Если записи не было - создаем с значением delta
-            // - Если запись была - добавляем delta к существующему значению
-            innerMap.merge(second, delta, Double::sum);
+           if (innerMap == null) innerMap = new ConcurrentHashMap<>();
+           innerMap.merge(second, delta, Double::sum);
             return innerMap;
         });
     }

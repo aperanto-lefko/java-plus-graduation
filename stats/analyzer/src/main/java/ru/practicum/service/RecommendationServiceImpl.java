@@ -12,9 +12,8 @@ import ru.practicum.model.UserAction;
 import ru.practicum.repository.EventSimilarityRepository;
 import ru.practicum.repository.UserActionRepository;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,23 +35,18 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Override
     public List<RecommendedEvent> getRecommendationsForUser(long userId, int maxResults) {
         log.info("Получение рекомендаций for userId={}, limit={}", userId, maxResults);
-
         //последние действия пользователя
         List<UserAction> userActions = userActionRepository.getRecentUserActions(userId, maxResults);
-
         if (userActions.isEmpty()) {
             return Collections.emptyList();
         }
-        // Извлекаем ID событий, с которыми уже взаимодействовал пользователь
+        // ID событий, с которыми уже взаимодействовал пользователь
         Set<Long> userEventIds = extractUserEventIds(userActions);
-        // Находим похожие события для действий пользователя
         List<EventSimilarity> similarEvents = findSimilarEventsForUser(userId, userActions);
         return similarEvents.stream()
                 // Исключаем события, с которыми пользователь уже взаимодействовал
                 .filter(e -> !userEventIds.contains(e.getEventIdB()))
-               // Ограничиваем количество результатов
                 .limit(maxResults)
-                // Преобразуем в RecommendedEvent
                 .map(this::convertToRecommendedEvent)
                 .collect(Collectors.toList());
     }
@@ -101,11 +95,10 @@ public class RecommendationServiceImpl implements RecommendationService {
         return maxWeights.entrySet().stream()
                 .map(entry -> {
                     long eventId = entry.getKey();
-                    // Суммируем все веса действий пользователей для этого события
                     double scoreSum = entry.getValue().values().stream()
                             .mapToDouble(Double::doubleValue)
                             .sum();
-                    //объект RecommendedEvent с eventId и суммарным весом
+
                     return new RecommendedEvent(eventId, scoreSum);
                 })
                 .collect(Collectors.toList());
