@@ -19,4 +19,6 @@ public interface RequestService {
     ParticipationRequestDto cancelParticipantRequest(long userId, long requestId);
 
     Map<Long, Integer> getConfirmedRequestsCounts(List<Long> eventIds);
+
+    boolean isRegistered(Long eventId, Long userId);
 }

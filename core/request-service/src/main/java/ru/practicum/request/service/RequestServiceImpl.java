@@ -1,15 +1,20 @@
 package ru.practicum.request.service;
 
+import com.google.protobuf.Timestamp;
 import feign.FeignException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.State;
 import ru.practicum.event.feign.EventServiceClient;
 
+import ru.practicum.evm.stats.proto.ActionTypeProto;
+import ru.practicum.evm.stats.proto.UserActionProto;
 import ru.practicum.exception.ConditionsNotMetException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.request.dto.EventRequestStatusUpdateRequest;
@@ -22,7 +27,6 @@ import ru.practicum.request.repository.RequestRepository;
 import ru.practicum.user.dto.UserShortDto;
 import ru.practicum.user.feign.UserServiceClient;
 
-
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -34,15 +38,17 @@ import java.util.stream.Collectors;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
+@Slf4j
 public class RequestServiceImpl implements RequestService {
     EventServiceClient eventServiceClient;
     RequestRepository requestRepository;
     RequestMapper requestMapper;
     UserServiceClient userServiceClient;
+    CollectorClient collectorClient;
 
     @Override
     public ParticipationRequestDto createParticipationRequest(long userId, long eventId) {
-
+        log.info("Создание запроса на участии в мероприятии для userId {} с eventId {}", userId, eventId);
         EventFullDto event = eventServiceClient.getEventById(eventId);
 
         if (!event.getState().equals(State.PUBLISHED)) {
@@ -54,7 +60,6 @@ public class RequestServiceImpl implements RequestService {
         }
 
         checkParticipantLimit(event.getParticipantLimit(), getConfirmedRequests(eventId));
-
         UserShortDto user = getUserById(userId);
 
         RequestStatus status = RequestStatus.PENDING;
@@ -77,6 +82,8 @@ public class RequestServiceImpl implements RequestService {
             throw new ConditionsNotMetException("Нельзя добавить повторный запрос на участие в событии");
         }
 
+        log.info("Отправка регистрации на мероприятие в collector");
+        collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
         return requestMapper.toDto(request);
     }
 
@@ -88,7 +95,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public List<ParticipationRequestDto> getAllByInitiatorIdAndEventId(long userId, long eventId) {
-       EventFullDto event;
+        EventFullDto event;
         try {
             event = eventServiceClient.getEventByIdAndInitiator(eventId, userId);
         } catch (FeignException.NotFound ex) {
@@ -96,9 +103,9 @@ public class RequestServiceImpl implements RequestService {
                     String.format("Событие с id %d для пользователя с id %d не найдено", eventId, userId)
             );
         }
-            List<Request> foundRequests = requestRepository.findAllByEventId(event.getId());
-            return requestMapper.toDtoList(foundRequests);
-        }
+        List<Request> foundRequests = requestRepository.findAllByEventId(event.getId());
+        return requestMapper.toDtoList(foundRequests);
+    }
 
     @Override
     public EventRequestStatusUpdateResult changeEventRequestsStatusByInitiator(EventRequestStatusUpdateRequest updateRequest, long userId, long eventId) {
@@ -190,6 +197,11 @@ public class RequestServiceImpl implements RequestService {
                         arr -> (Long) arr[0],  // eventId
                         arr -> ((Number) arr[1]).intValue()  // count
                 ));
+    }
+
+    @Override
+    public boolean isRegistered(Long eventId, Long userId) {
+        return requestRepository.existsByEventIdAndUserId(eventId, userId);
     }
 
     private void handleRejectedRequests(List<Request> foundRequests, EventRequestStatusUpdateResult result, List<ParticipationRequestDto> rejected) {

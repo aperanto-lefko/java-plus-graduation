@@ -3,13 +3,17 @@ package ru.practicum.event.service;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.service.CategoryService;
+import ru.practicum.client.AnalyzerClient;
+import ru.practicum.client.CollectorClient;
 import ru.practicum.event.dto.EventDtoGetParam;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.EventShortDto;
@@ -25,6 +29,8 @@ import ru.practicum.event.model.QEvent;
 import ru.practicum.event.dto.State;
 import ru.practicum.event.dto.StateAction;
 import ru.practicum.event.repository.EventRepository;
+import ru.practicum.evm.stats.proto.ActionTypeProto;
+import ru.practicum.evm.stats.proto.RecommendedEventProto;
 import ru.practicum.exception.ConflictStateException;
 import ru.practicum.exception.ConflictTimeException;
 import ru.practicum.exception.NotFoundException;
@@ -47,16 +53,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EventServiceImpl implements EventService {
-    private final EventRepository eventRepository;
-    private final LocationService locationService;
-    private final CategoryService categoryService;
-    private final ViewService viewService;
-    private final EventMapper mp;
-    private final LocationMapper lmp;
-    private final QEvent event = QEvent.event;
-    private final UserServiceClient userServiceClient;
-    private final RequestServiceClient requestServiceClient;
+    EventRepository eventRepository;
+    LocationService locationService;
+    CategoryService categoryService;
+    ViewService viewService;
+    EventMapper mp;
+    LocationMapper lmp;
+    QEvent event = QEvent.event;
+    UserServiceClient userServiceClient;
+    RequestServiceClient requestServiceClient;
+    CollectorClient collectorClient;
+    AnalyzerClient analyzerClient;
 
     @Transactional
     @Override
@@ -246,9 +255,9 @@ public class EventServiceImpl implements EventService {
                     .collect(Collectors.toList());
         }
 
-        if (!events.isEmpty()) {
-            viewService.saveViews(events, rqt);
-        }
+//        if (!events.isEmpty()) {
+//            viewService.saveViews(events, rqt);
+//        }
 
         List<EventShortDto> dtos = toEventShortDtoAddUserList(events);
         dtos.forEach(dto ->
@@ -259,7 +268,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto getPublicEventById(Long id, HttpServletRequest rqt) {
+    public EventFullDto getPublicEventById(Long id, Long userId, HttpServletRequest rqt) {
         Predicate predicate = event.state.eq(State.PUBLISHED).and(event.id.eq(id));
         Event ev = eventRepository.findOne(predicate)
                 .orElseThrow(() -> new NotFoundException(
@@ -269,6 +278,10 @@ public class EventServiceImpl implements EventService {
                 .getOrDefault(ev.getId(), 0);
         EventFullDto eventFullDto = addUserShortDtoToFullDto(ev, ev.getUserId());
         eventFullDto.setConfirmedRequests(confirmedRequests);
+
+        log.info("Отправка регистрации на мероприятие в collector");
+        collectorClient.sendUserAction(userId, id, ActionTypeProto.ACTION_VIEW);
+
         return eventFullDto;
     }
 
@@ -300,6 +313,37 @@ public class EventServiceImpl implements EventService {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Не найдено события с id: " + id));
     }
+
+    @Override
+    public void likeEvent(Long eventId, Long userId) {
+        if (requestServiceClient.isRegistered(eventId, userId)) {
+            log.info("Отправка регистрации на мероприятие в collector");
+            collectorClient.sendUserAction(userId, eventId, ActionTypeProto.ACTION_LIKE);
+        } else {
+            throw new NotFoundException(String.format("Пользователь userId {} не зарегистрирован на событие eventId {}", userId, eventId));
+        }
+    }
+    @Override
+    public List<EventShortDto> getRecommendations(Long userId, int limit) {
+        log.info("Поиск рекомендаций для пользователя userId {} с limit {}", userId, limit);
+        List<RecommendedEventProto> recommendedEvents = analyzerClient
+                .getRecommendationsForUser(userId, limit)
+                .toList();
+        if (recommendedEvents.isEmpty()) {
+            log.info("Рекомендации не найдены для пользователя: {}", userId);
+            return Collections.emptyList();
+        }
+        List<Long> recommendedEventIds = recommendedEvents.stream()
+                .map(RecommendedEventProto::getEventId)
+                .toList();
+
+        List<Event> events = eventRepository.findAllByIdIn(recommendedEventIds);
+
+        return events.stream()
+                .map(mp::toEventShortDto)
+                .toList();
+    }
+
 
     private void dateValid(LocalDateTime start, LocalDateTime end) {
         if (start.isAfter(end)) {
